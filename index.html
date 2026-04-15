@@ -1639,6 +1639,9 @@
                             dailyTotal
                         };
                     });
+                
+                // Ensure logs are strictly descending by Date to guarantee Dashboard formulas, timeline projections, and KPIs execute properly.
+                logs.sort((a,b) => b.date.localeCompare(a.date));
             }
 
             // Set default form date to today
@@ -2332,7 +2335,7 @@
                 }
             });
 
-            // Absent: weekdays from START_DATE up to yesterday with no log
+            // Absent: weekdays from actual logged start date up to yesterday with no log
             const logDates = new Set(logs.map(l => l.date));
             const today = new Date();
             today.setHours(0, 0, 0, 0);
@@ -2340,7 +2343,8 @@
             yesterday.setDate(yesterday.getDate() - 1);
 
             let absent = 0;
-            const cur = new Date(START_DATE);
+            const actualStartDate = logs.length > 0 ? new Date(logs[logs.length - 1].date) : new Date(START_DATE);
+            const cur = new Date(actualStartDate);
             cur.setHours(0, 0, 0, 0);
 
             while (cur <= yesterday) {
@@ -3166,7 +3170,8 @@
                     });
                 }
                 
-                // Save and refresh
+                // Save and refresh strictly sorted timeline
+                logs.sort((a,b) => b.date.localeCompare(a.date));
                 localStorage.setItem('ojt_logs', JSON.stringify(logs));
                 renderApp();
                 
