@@ -18,6 +18,12 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 
+    <!-- PDF.js for Importing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+    </script>
+
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -677,11 +683,19 @@
                     <i data-lucide="chevron-down" id="history-chevron"
                         class="text-stone-500 group-hover:text-cyan-400 transition-all w-5 h-5 ml-1"></i>
                 </button>
-                <button id="export-pdf-btn"
-                    class="flex items-center gap-3 px-8 py-4 bg-white/5 hover:bg-white/10 text-stone-50 rounded-3xl text-sm font-black transition-all border border-white/5">
-                    <i data-lucide="download" class="w-5 h-5"></i>
-                    EXPORT DTR
-                </button>
+                <div class="flex items-center gap-3">
+                    <input type="file" id="import-pdf-input" accept="application/pdf" class="hidden">
+                    <button onclick="document.getElementById('import-pdf-input').click()"
+                        class="flex items-center gap-3 px-8 py-4 bg-stone-800/50 hover:bg-stone-700 text-stone-50 rounded-3xl text-sm font-black transition-all border border-white/5 outline-dashed outline-1 outline-white/20 hover:outline-white/40">
+                        <i data-lucide="upload" class="w-5 h-5 text-cyan-400"></i>
+                        IMPORT DTR
+                    </button>
+                    <button id="export-pdf-btn"
+                        class="flex items-center gap-3 px-8 py-4 bg-white/5 hover:bg-white/10 text-stone-50 rounded-3xl text-sm font-black transition-all border border-white/5">
+                        <i data-lucide="download" class="w-5 h-5"></i>
+                        EXPORT DTR
+                    </button>
+                </div>
             </div>
 
             <div id="history-table-wrapper" class="overflow-x-auto no-scrollbar transition-all duration-500">
@@ -3038,6 +3052,135 @@
             const course = userProgram || 'BA';
             doc.save(`DTR - ${lastName} - ${course}.pdf`);
         });
+
+        // --- PDF Import Logic ---
+        document.getElementById('import-pdf-input').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            if (file.type !== 'application/pdf') {
+                showDialog('Import Failed', 'Only PDF files are accepted.');
+                return;
+            }
+
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                let mergedCount = 0;
+
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const page = await pdf.getPage(i);
+                    const textContent = await page.getTextContent();
+                    
+                    // Group text by Y coordinate roughly (e.g. +/- 2px)
+                    const rowsObj = {};
+                    let currentMonth = null;
+                    let currentYear = null;
+
+                    textContent.items.forEach(item => {
+                        const str = item.str.trim();
+                        const monthMatch = str.match(/^(January|February|March|April|May|June|July|August|September|October|November|December)\s(\d{4})$/i);
+                        if (monthMatch) {
+                            currentMonth = monthMatch[1];
+                            currentYear = monthMatch[2];
+                        }
+                        
+                        // Round Y coordinate to nearest 2 pixels to group slightly offset aligned texts
+                        const y = Math.round(item.transform[5] / 2) * 2;
+                        if (!rowsObj[y]) rowsObj[y] = [];
+                        rowsObj[y].push({ x: item.transform[4], text: str });
+                    });
+                    
+                    if (!currentMonth || !currentYear) {
+                         const mm = textContent.items.find(it => /^(January|February|March|April|May|June|July|August|September|October|November|December)$/i.test(it.str.trim()));
+                         if (mm) currentMonth = mm.str.trim();
+                         currentYear = '2026';
+                    }
+
+                    if (!currentMonth) continue;
+
+                    const sortedY = Object.keys(rowsObj).map(Number).sort((a,b) => b-a);
+                    const monthMap = { 'January': '01', 'February': '02', 'March': '03', 'April': '04', 'May': '05', 'June': '06', 'July': '07', 'August': '08', 'September': '09', 'October': '10', 'November': '11', 'December': '12' };
+                    const monthNumStr = monthMap[currentMonth] || '01';
+
+                    sortedY.forEach(y => {
+                        const cols = rowsObj[y].sort((a,b) => a.x - b.x).map(c => c.text).filter(t => t);
+                        
+                        if (cols.length >= 2) {
+                            const dayNum = parseInt(cols[0]);
+                            if (!isNaN(dayNum) && dayNum >= 1 && dayNum <= 31 && cols[0] === String(dayNum)) {
+                                
+                                const allTimes = cols.filter(c => /^\d{1,2}:\d{2}\s?[AP]M$/i.test(c));
+                                let amIn = '', amOut = '', pmIn = '', pmOut = '';
+                                
+                                if (allTimes.length === 2) {
+                                    amIn = convertTo24(allTimes[0]);
+                                    amOut = convertTo24(allTimes[1]);
+                                } else if (allTimes.length === 4) {
+                                    amIn = convertTo24(allTimes[0]);
+                                    amOut = convertTo24(allTimes[1]);
+                                    pmIn = convertTo24(allTimes[2]);
+                                    pmOut = convertTo24(allTimes[3]);
+                                }
+
+                                if (amIn && amOut) {
+                                    const dateStr = `${currentYear}-${monthNumStr}-${String(dayNum).padStart(2, '0')}`;
+                                    const isEarlyOut = !pmIn || !pmOut;
+                                    const effAmIn = amIn < '07:00' ? '07:00' : amIn;
+                                    const amH = calculateHours(effAmIn, amOut);
+                                    const pmH = isEarlyOut ? 0 : calculateHours(pmIn, pmOut);
+                                    
+                                    let dailyTotal = Math.min(8, amH + pmH);
+                                    let isOT = false;
+                                    if (!isEarlyOut && (amH + pmH) >= 9) {
+                                        dailyTotal = amH + pmH;
+                                        isOT = true; 
+                                    }
+                                    
+                                    const existingIdx = logs.findIndex(l => l.date === dateStr);
+                                    const newEntry = {
+                                        id: existingIdx >= 0 ? logs[existingIdx].id : crypto.randomUUID(),
+                                        date: dateStr,
+                                        amIn, amOut, pmIn, pmOut,
+                                        dailyTotal, isEarlyOut, isOvertime: isOT,
+                                    };
+                                    
+                                    if (existingIdx >= 0) {
+                                        logs[existingIdx] = newEntry; // Overwrite
+                                    } else {
+                                        logs.push(newEntry);
+                                    }
+                                    mergedCount++;
+                                }
+                            }
+                        }
+                    });
+                }
+                
+                // Save and refresh
+                localStorage.setItem('ojt_logs', JSON.stringify(logs));
+                renderApp();
+                lucide.createIcons();
+                e.target.value = ""; // clear input
+                setTimeout(() => showDialog('Import Successful', `Successfully imported and merged ${mergedCount} daily entries from the DTR.`), 200);
+
+            } catch (err) {
+                console.error(err);
+                e.target.value = "";
+                showDialog('Import Failed', 'Could not parse the PDF properly. Please ensure it is a valid DTR PDF generated by the Time Keeper.');
+            }
+        });
+
+        function convertTo24(timeStr) {
+            if (!timeStr) return '';
+            const match = timeStr.trim().match(/^(\d{1,2}):(\d{2})\s*([AP]M)$/i);
+            if (!match) return '';
+            let h = parseInt(match[1]);
+            const m = match[2];
+            const ampm = match[3].toUpperCase();
+            if (ampm === 'PM' && h < 12) h += 12;
+            if (ampm === 'AM' && h === 12) h = 0;
+            return `${String(h).padStart(2,'0')}:${m}`;
+        }
 
         // Real-Time Clock
         let _clockLastDate = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Manila' });
