@@ -1,13 +1,3146 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>My Google AI Studio App</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
-</html>
+<!DOCTYPE html>
+<html lang="en" class="dark">
 
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CICT Student Intern Time Keeper</title>
+    <link rel="icon" type="image/svg+xml"
+        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230a0a0a'/%3E%3Ccircle cx='32' cy='32' r='18' fill='none' stroke='%2322d3ee' stroke-width='4'/%3E%3Cline x1='32' y1='32' x2='32' y2='20' stroke='%2322d3ee' stroke-width='3.5' stroke-linecap='round'/%3E%3Cline x1='32' y1='32' x2='42' y2='37' stroke='%2322d3ee' stroke-width='3.5' stroke-linecap='round'/%3E%3Ccircle cx='32' cy='32' r='2.5' fill='%2322d3ee'/%3E%3C/svg%3E">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- jsPDF and AutoTable -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+
+    <!-- Custom Tailwind Configuration and CSS -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #0c0a09;
+            /* stone-950 */
+            color: #fafaf9;
+            /* stone-50 */
+            font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+            transition: background-color 1s ease;
+            background-image:
+                radial-gradient(circle at 0% 0%, rgba(34, 211, 238, 0.03) 0%, transparent 50%),
+                radial-gradient(circle at 100% 100%, rgba(34, 211, 238, 0.03) 0%, transparent 50%);
+        }
+
+        body.overtime-bg {
+            background-color: #0c0a09;
+            background-image: 
+                radial-gradient(circle at 0% 0%, rgba(168, 85, 247, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 100% 100%, rgba(168, 85, 247, 0.15) 0%, transparent 50%),
+                linear-gradient(-45deg, #0c0a09, rgba(46, 16, 101, 0.8), rgba(76, 29, 149, 0.8), #170936);
+            background-size: 100% 100%, 100% 100%, 400% 400%;
+            animation: gradient-purple 15s ease infinite;
+        }
+
+        @keyframes gradient-purple {
+            0% { background-position: 0% 50%, 0% 50%, 0% 50%; }
+            50% { background-position: 0% 50%, 0% 50%, 100% 50%; }
+            100% { background-position: 0% 50%, 0% 50%, 0% 50%; }
+        }
+
+        .glass {
+            background-color: rgba(28, 25, 23, 0.4);
+            /* stone-900/40 */
+            backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            transition: all 0.5s;
+        }
+
+        .data-grid-header {
+            font-family: 'Inter', sans-serif;
+            font-weight: 900;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.3em;
+            color: rgba(34, 211, 238, 0.4);
+            /* cyan-400/40 */
+        }
+
+        /* Hide scrollbar for Chrome, Safari and Opera */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* Hide scrollbar for IE, Edge and Firefox */
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            /* IE and Edge */
+            scrollbar-width: none;
+            /* Firefox */
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        .viewport-section {
+            padding-top: 50px;
+            padding-bottom: 10px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .section-divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(34, 211, 238, 0.1), transparent);
+            margin: 20px auto;
+            width: 100%;
+            max-width: 800px;
+        }
+
+        .nav-glass {
+            background: rgba(12, 10, 9, 0.7);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+
+        .nav-link {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            color: #78716c; /* stone-400 */
+        }
+
+        .nav-link:hover {
+            color: #fafaf9; /* stone-50 */
+        }
+
+        .nav-link.active {
+            color: #22d3ee; /* cyan-400 */
+        }
+
+        .nav-link.active::after {
+            content: '';
+            position: absolute;
+            bottom: -6px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 12px;
+            height: 3px;
+            background: #22d3ee;
+            border-radius: 99px;
+            box-shadow: 0 0 15px rgba(34, 211, 238, 0.6);
+        }
+
+        @media (max-width: 768px) {
+            .viewport-section {
+                padding-top: 90px;
+                padding-bottom: 40px;
+            }
+            #top-nav {
+                top: 10px;
+                max-width: 95vw;
+                width: max-content;
+            }
+            .nav-link {
+                padding-left: 0.5rem !important;
+                padding-right: 0.5rem !important;
+                font-size: 10px !important;
+                letter-spacing: 0.1em !important;
+            }
+            .nav-glass {
+                padding: 0.5rem;
+            }
+        }
+
+    </style>
+</head>
+
+<body class="min-h-screen p-4 md:p-8 max-w-7xl mx-auto overflow-x-hidden">
+    <!-- Navigation Bar -->
+    <nav class="fixed top-6 left-1/2 -translate-x-1/2 z-50 w-max max-w-[95vw] px-2" id="top-nav">
+        <div class="nav-glass rounded-3xl p-2 md:p-3 flex items-center justify-between md:justify-around gap-1 md:gap-2 overflow-x-auto no-scrollbar">
+            <a href="#dashboard" class="nav-link px-3 md:px-4 py-2 text-[10px] md:text-xs font-black uppercase tracking-widest md:tracking-[0.2em] whitespace-nowrap active text-center" data-section="dashboard">Dashboard</a>
+            <a href="#log-session" class="nav-link px-3 md:px-4 py-2 text-[10px] md:text-xs font-black uppercase tracking-widest md:tracking-[0.2em] whitespace-nowrap text-center" data-section="log-session">Log Session</a>
+            <a href="#history" class="nav-link px-3 md:px-4 py-2 text-[10px] md:text-xs font-black uppercase tracking-widest md:tracking-[0.2em] whitespace-nowrap text-center" data-section="history">History</a>
+            <a href="#analytics" class="nav-link px-3 md:px-4 py-2 text-[10px] md:text-xs font-black uppercase tracking-widest md:tracking-[0.2em] whitespace-nowrap text-center" data-section="analytics">Analytics</a>
+        </div>
+    </nav>
+
+    <main class="w-full">
+        <!-- Dashboard Section -->
+        <section id="dashboard" class="viewport-section">
+            <!-- Header Section -->
+            <header
+        class="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-6 relative transition-all duration-1000 opacity-0 translate-x-[-50px]"
+        id="anim-header-title">
+        <div class="flex-1">
+            <div class="flex items-center gap-4">
+                <h1
+                    class="text-5xl md:text-7xl font-sans font-black tracking-tighter text-stone-50 leading-[0.85] select-none">
+                    CICT Student Intern<br />
+                    <span class="text-stone-700">Time Keeper</span>
+                </h1>
+            </div>
+            <p class="mt-3 text-stone-500 max-w-lg font-medium text-sm leading-relaxed opacity-0 transition-opacity duration-1000 delay-500"
+                id="anim-header-text">
+                Log your hours, track your progress, and stay on top of your CICT internship goals with precision.
+            </p>
+        </div>
+
+        <div class="flex flex-col items-end gap-4 opacity-0 scale-90 transition-all duration-800 delay-300"
+            id="anim-header-stats">
+            <!-- Real-Time Clock -->
+            <div class="text-right">
+                <div id="live-clock" class="font-sans font-black text-stone-50 tracking-tight leading-none"
+                    style="font-size:clamp(2rem,4vw,3.5rem)">00:00:00</div>
+                <div id="live-date" class="text-xs font-bold text-stone-500 uppercase tracking-[0.2em] mt-1">Thursday,
+                    March 06, 2026</div>
+            </div>
+            <div class="flex gap-3">
+                <span
+                    class="px-5 py-2 bg-stone-50 text-stone-950 text-xs uppercase tracking-widest rounded-full font-black shadow-xl">
+                    Target: 486h
+                </span>
+                <span
+                    class="px-5 py-2 bg-cyan-500/10 text-cyan-400 text-xs uppercase tracking-widest rounded-full font-black border border-cyan-400/20 backdrop-blur-md"
+                    id="progress-percentage">
+                    Progress: 0.0%
+                </span>
+            </div>
+            <div class="flex items-center gap-2">
+                <i data-lucide="flag" class="w-3 h-3 text-stone-600"></i>
+                <span class="text-[10px] font-bold text-stone-600 uppercase tracking-[0.2em]">Est. Finish:</span>
+                <span class="text-[10px] font-black text-amber-400 tracking-wide" id="estimated-finish-date">—</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Overtime Status Banner (Hidden by default) -->
+    <div id="overtime-banner-container" class="hidden mb-6 opacity-0 translate-y-[-10px] transition-all duration-700">
+        <div class="bg-violet-500/10 border border-violet-500/30 rounded-3xl p-5 flex flex-col sm:flex-row items-center justify-between gap-4 glass shadow-[0_0_30px_rgba(139,92,246,0.15)]">
+            <div class="flex items-center gap-4">
+                <div class="w-10 h-10 rounded-2xl bg-violet-500/20 flex flex-shrink-0 items-center justify-center border border-violet-500/30">
+                    <i data-lucide="clock-4" class="text-violet-400 w-5 h-5 animate-pulse"></i>
+                </div>
+                <div>
+                    <h3 class="text-violet-300 font-bold text-[13px] tracking-wide uppercase">Overtime Window Active</h3>
+                    <p class="text-stone-400 text-xs mt-1 leading-relaxed" id="overtime-status-msg">It's past 4:00 PM. Are you rendering overtime today?</p>
+                </div>
+            </div>
+            <div class="flex gap-2 shrink-0 w-full sm:w-auto mt-2 sm:mt-0" id="overtime-action-btns">
+                <button type="button" onclick="confirmOvertime(false)" class="flex-1 py-2 px-6 rounded-xl bg-white/5 border border-white/10 text-stone-300 text-xs font-bold hover:bg-white/10 transition-all active:scale-95">Decline</button>
+                <button type="button" onclick="confirmOvertime(true)" class="flex-1 py-2 px-6 rounded-xl bg-violet-500 hover:bg-violet-400 text-stone-950 text-xs font-black shadow-lg shadow-violet-500/20 transition-all active:scale-95 tracking-wide">Claim Overtime</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- OJT Progress Bar Strip -->
+    <div class="mb-8 opacity-0 transition-opacity duration-1000 delay-600" id="anim-progress-bar">
+        <div class="flex justify-between items-center mb-2">
+            <span class="text-[10px] font-black uppercase tracking-[0.3em] text-stone-500">OJT Progress</span>
+            <div class="flex items-center gap-3">
+                <span class="text-[10px] font-bold text-stone-600" id="progress-bar-label">0.00 / 486.00 hrs</span>
+                <span class="text-[10px] font-black text-cyan-400 tracking-widest" id="progress-bar-pct">0.0%</span>
+            </div>
+        </div>
+        <div class="w-full h-2 bg-white/5 rounded-full overflow-hidden">
+            <div id="ojt-progress-fill" class="h-full rounded-full transition-all duration-700"
+                style="width:0%; background: linear-gradient(90deg, #22d3ee, #06b6d4);"></div>
+        </div>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-5 opacity-0 translate-y-[30px] transition-all duration-700 delay-400"
+        id="anim-stats-grid">
+
+        <div
+            class="glass p-7 rounded-[2.5rem] flex flex-col justify-between h-44 relative overflow-hidden group hover:-translate-y-2 hover:scale-[1.02] transition-transform cursor-default">
+            <div
+                class="absolute top-0 right-0 w-40 h-40 bg-cyan-400/5 rounded-full -mr-20 -mt-20 blur-3xl group-hover:bg-cyan-400/10 transition-colors duration-700">
+            </div>
+            <div class="flex justify-between items-start relative z-10">
+                <div class="p-3 bg-cyan-400/10 rounded-2xl border border-cyan-400/20">
+                    <i data-lucide="trending-up" class="text-cyan-400 w-5 h-5"></i>
+                </div>
+                <span class="data-grid-header">Hours Served</span>
+            </div>
+            <div class="text-5xl font-black text-stone-50 relative z-10 tracking-tighter" id="total-hours-served">
+                0.00
+            </div>
+        </div>
+
+        <div
+            class="glass p-7 rounded-[2.5rem] flex flex-col justify-between h-44 relative overflow-hidden group hover:-translate-y-2 hover:scale-[1.02] transition-transform cursor-default">
+            <div
+                class="absolute top-0 right-0 w-40 h-40 bg-amber-400/5 rounded-full -mr-20 -mt-20 blur-3xl group-hover:bg-amber-400/10 transition-colors duration-700">
+            </div>
+            <div class="flex justify-between items-start relative z-10">
+                <div class="p-3 bg-amber-400/10 rounded-2xl border border-amber-400/20">
+                    <i data-lucide="target" class="text-amber-400 w-5 h-5"></i>
+                </div>
+                <span class="data-grid-header">Remaining</span>
+            </div>
+            <div class="text-5xl font-black text-stone-500 relative z-10 tracking-tighter" id="remaining-hours">
+                486.00
+            </div>
+        </div>
+
+        <div
+            class="p-7 rounded-[2.5rem] flex flex-col justify-between h-44 bg-cyan-500 text-stone-950 shadow-2xl relative overflow-hidden group hover:-translate-y-2 hover:scale-[1.02] transition-transform cursor-default">
+            <div
+                class="absolute bottom-0 right-0 w-40 h-40 bg-white/20 rounded-full -mr-20 -mb-20 blur-3xl group-hover:bg-white/30 transition-colors duration-700">
+            </div>
+            <div class="flex justify-between items-start relative z-10">
+                <div class="p-3 bg-white/20 rounded-2xl">
+                    <i data-lucide="calendar" class="text-stone-950 w-5 h-5"></i>
+                </div>
+                <span class="font-sans font-black text-[10px] uppercase tracking-[0.4em] text-stone-950/40">Est. Weeks
+                    Left</span>
+            </div>
+            <div class="text-5xl font-black relative z-10 tracking-tighter" id="estimated-weeks">
+                0.0
+            </div>
+        </div>
+
+    </div>
+    </section>
+
+    <!-- Divider -->
+    <div class="section-divider"></div>
+
+    <!-- Log Session Section -->
+    <section id="log-session" class="viewport-section">
+    <div class="flex flex-col gap-10">
+        <!-- Input Form -->
+        <div class="opacity-0 translate-x-[-40px] transition-all duration-800 delay-700" id="anim-input-form">
+            <div class="glass p-8 rounded-[3.5rem] border border-white/5">
+                <div class="grid grid-cols-1 lg:grid-cols-[1fr_1px_2fr] gap-8">
+                    <!-- Profile Section -->
+                    <div>
+                        <h2 class="text-xl font-sans font-black mb-5 text-stone-50 flex items-center gap-3">
+                            <i data-lucide="user" class="text-cyan-400 w-5 h-5"></i>
+                            Profile
+                        </h2>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="data-grid-header block mb-2">Intern's Name</label>
+                                <input type="text" id="user-name-input" placeholder="Enter your full name"
+                                    class="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-500/40 focus:border-cyan-500/50 transition-all text-stone-50 placeholder:text-stone-500 font-bold text-base tracking-wide" />
+                            </div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="data-grid-header block mb-2">Program</label>
+                                    <input type="text" id="user-program-input" placeholder="e.g. BSIT"
+                                        class="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-500/40 focus:border-cyan-500/50 transition-all text-stone-50 placeholder:text-stone-500 font-bold text-base tracking-wide" />
+                                </div>
+                                <div>
+                                    <label class="data-grid-header block mb-2">Section</label>
+                                    <input type="text" id="user-section-input" placeholder="e.g. 4A"
+                                        class="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-500/40 focus:border-cyan-500/50 transition-all text-stone-50 placeholder:text-stone-500 font-bold text-base tracking-wide" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Performance Section -->
+                        <div class="mt-6 pt-6 border-t border-white/5">
+                            <h2 class="text-xl font-sans font-black mb-4 text-stone-50 flex items-center gap-3">
+                                <i data-lucide="bar-chart-2" class="text-cyan-400 w-5 h-5"></i>
+                                Performance
+                            </h2>
+                            <p class="text-[10px] font-bold text-stone-600 uppercase tracking-[0.2em] mb-4">
+                                Since Jan 20, 2026
+                            </p>
+                            <div class="grid grid-cols-3 gap-3">
+                                <!-- Present (On-Time/Early) -->
+                                <div class="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-4 flex flex-col gap-1">
+                                    <div class="flex items-center gap-1.5 mb-1">
+                                        <i data-lucide="check-circle" class="w-3.5 h-3.5 text-emerald-400/70"></i>
+                                        <span class="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-400/70">On-Time/Early</span>
+                                    </div>
+                                    <span class="text-4xl font-black text-emerald-400 leading-none" id="perf-present">0</span>
+                                    <span class="text-[10px] font-bold text-stone-600 mt-1">&le; 7:00 AM in</span>
+                                </div>
+                                <!-- Late -->
+                                <div class="bg-orange-500/10 border border-orange-500/20 rounded-2xl p-4 flex flex-col gap-1">
+                                    <div class="flex items-center gap-1.5 mb-1">
+                                        <i data-lucide="clock-4" class="w-3.5 h-3.5 text-orange-400/70"></i>
+                                        <span class="text-[10px] font-black uppercase tracking-[0.2em] text-orange-400/70">Late</span>
+                                    </div>
+                                    <span class="text-4xl font-black text-orange-400 leading-none" id="perf-late">0</span>
+                                    <span class="text-[10px] font-bold text-stone-600 mt-1">&gt; 7:00 AM in</span>
+                                </div>
+                                <!-- Absent -->
+                                <div class="bg-stone-500/10 border border-stone-500/20 rounded-2xl p-4 flex flex-col gap-1">
+                                    <div class="flex items-center gap-1.5 mb-1">
+                                        <i data-lucide="x-circle" class="w-3.5 h-3.5 text-stone-400/70"></i>
+                                        <span class="text-[10px] font-black uppercase tracking-[0.2em] text-stone-400/70">Absent</span>
+                                    </div>
+                                    <span class="text-4xl font-black text-stone-400 leading-none" id="perf-absent">0</span>
+                                    <span class="text-[10px] font-bold text-stone-600 mt-1">No login days</span>
+                                </div>
+                            </div>
+
+                            <!-- Calendar Viewport -->
+                            <div class="mt-5 pt-5 border-t border-white/5">
+                                <!-- Month Nav -->
+                                <div class="flex items-center justify-between mb-3">
+                                    <button onclick="shiftCalendar(-1)"
+                                        class="p-1.5 rounded-xl hover:bg-white/10 text-stone-500 hover:text-stone-200 transition-all"
+                                        title="Previous month" aria-label="Previous month">
+                                        <i data-lucide="chevron-left" class="w-4 h-4"></i>
+                                    </button>
+                                    <span class="text-sm font-black text-stone-300 uppercase tracking-[0.15em]"
+                                        id="cal-month-label">—</span>
+                                    <button onclick="shiftCalendar(1)"
+                                        class="p-1.5 rounded-xl hover:bg-white/10 text-stone-500 hover:text-stone-200 transition-all"
+                                        title="Next month" aria-label="Next month">
+                                        <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                                    </button>
+                                </div>
+
+                                <!-- Day-of-week headers: Sun → Sat -->
+                                <div class="grid grid-cols-7 gap-1 mb-1">
+                                    <span class="text-[9px] font-black uppercase text-stone-600 text-center">S</span>
+                                    <span class="text-[9px] font-black uppercase text-stone-600 text-center">M</span>
+                                    <span class="text-[9px] font-black uppercase text-stone-600 text-center">T</span>
+                                    <span class="text-[9px] font-black uppercase text-stone-600 text-center">W</span>
+                                    <span class="text-[9px] font-black uppercase text-stone-600 text-center">T</span>
+                                    <span class="text-[9px] font-black uppercase text-stone-600 text-center">F</span>
+                                    <span class="text-[9px] font-black uppercase text-stone-600 text-center">S</span>
+                                </div>
+
+                                <!-- Day cells (populated by JS) -->
+                                <div class="grid grid-cols-7 gap-1" id="cal-grid" role="grid"
+                                    aria-label="Attendance calendar"></div>
+
+                                <!-- Legend -->
+                                <div class="flex items-center gap-3 mt-3 flex-wrap">
+                                    <div class="flex items-center gap-1.5">
+                                        <div class="w-2 h-2 rounded-full bg-emerald-500/70"></div>
+                                        <span class="text-[9px] font-bold text-stone-600 uppercase tracking-widest">On-Time/Early</span>
+                                    </div>
+                                    <div class="flex items-center gap-1.5">
+                                        <div class="w-2 h-2 rounded-full bg-orange-500/70"></div>
+                                        <span class="text-[9px] font-bold text-stone-600 uppercase tracking-widest">Late</span>
+                                    </div>
+                                    <div class="flex items-center gap-1.5">
+                                        <div class="w-2 h-2 rounded-full bg-stone-500/70"></div>
+                                        <span class="text-[9px] font-bold text-stone-600 uppercase tracking-widest">Absent</span>
+                                    </div>
+                                    <div class="flex items-center gap-1.5">
+                                        <div class="w-2 h-2 rounded-full bg-red-500/70"></div>
+                                        <span class="text-[9px] font-bold text-stone-600 uppercase tracking-widest">Holidays</span>
+                                    </div>
+                                    <div class="flex items-center gap-1.5">
+                                        <div class="w-2 h-2 rounded-full bg-purple-500/70"></div>
+                                        <span class="text-[9px] font-bold text-stone-600 uppercase tracking-widest">Overtime</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- Vertical Divider -->
+                    <div class="hidden lg:block w-px bg-white/5 self-stretch"></div>
+
+                    <!-- Log Session Section -->
+                    <div>
+                        <h2 class="text-xl font-sans font-black mb-5 text-stone-50 flex items-center gap-3">
+                            <i data-lucide="clock" class="text-cyan-400 w-5 h-5"></i>
+                            Log Session
+                        </h2>
+                        <form id="log-form" class="space-y-5">
+                            <div>
+                                <label class="data-grid-header block mb-2">Date</label>
+                                <input type="date" id="log-date"
+                                    class="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-500/40 focus:border-cyan-500/50 transition-all text-stone-50 font-bold text-base tracking-wide [color-scheme:dark]"
+                                    required />
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="data-grid-header block mb-2">AM In</label>
+                                    <div class="relative group/time">
+                                        <i data-lucide="sun"
+                                            class="absolute left-4 top-1/2 -translate-y-1/2 text-cyan-400/50 w-5 h-5 pointer-events-none"></i>
+                                        <input type="time" id="am-in"
+                                            class="w-full bg-white/5 border border-white/10 rounded-2xl pl-12 pr-14 py-3.5 focus:outline-none focus:ring-2 focus:ring-cyan-500/40 focus:border-cyan-500/50 transition-all text-stone-50 font-bold text-base tracking-widest [color-scheme:dark]"
+                                            oninput="checkLockVisibility('am-in'); computeExpectedLogout(); renderCalendar()" required />
+                                        <button type="button" onclick="setFieldToNow('am-in')"
+                                            class="absolute right-2 top-1/2 -translate-y-1/2 hover:scale-105 active:scale-95 transition-all"
+                                            title="Set to current time">
+                                            <span
+                                                class="flex items-center justify-center bg-stone-50 text-stone-950 font-black text-[10px] tracking-widest rounded-lg px-2 py-1 shadow-md">AUTO</span>
+                                        </button>
+                                    </div>
+                                    <button type="button" id="lock-am-in" onclick="lockField('am-in')"
+                                        class="hidden mt-2 w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-xs font-black uppercase tracking-widest hover:bg-cyan-500/20 transition-all">
+                                        <i data-lucide="lock" class="w-3.5 h-3.5"></i>
+                                        Lock In
+                                    </button>
+                                </div>
+                                <div>
+                                    <label class="data-grid-header block mb-2">AM Out</label>
+                                    <div class="relative group/time">
+                                        <i data-lucide="coffee"
+                                            class="absolute left-4 top-1/2 -translate-y-1/2 text-cyan-400/50 w-5 h-5 pointer-events-none"></i>
+                                        <input type="time" id="am-out"
+                                            class="w-full bg-white/5 border border-white/10 rounded-2xl pl-12 pr-14 py-3.5 focus:outline-none focus:ring-2 focus:ring-cyan-500/40 focus:border-cyan-500/50 transition-all text-stone-50 font-bold text-base tracking-widest [color-scheme:dark]"
+                                            oninput="checkLockVisibility('am-out'); computeExpectedLogout()" required />
+                                        <button type="button" onclick="setFieldToNow('am-out')"
+                                            class="absolute right-2 top-1/2 -translate-y-1/2 hover:scale-105 active:scale-95 transition-all"
+                                            title="Set to current time">
+                                            <span
+                                                class="flex items-center justify-center bg-stone-50 text-stone-950 font-black text-[10px] tracking-widest rounded-lg px-2 py-1 shadow-md">AUTO</span>
+                                        </button>
+                                    </div>
+                                    <button type="button" id="lock-am-out" onclick="lockField('am-out')"
+                                        class="hidden mt-2 w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-xs font-black uppercase tracking-widest hover:bg-cyan-500/20 transition-all">
+                                        <i data-lucide="lock" class="w-3.5 h-3.5"></i>
+                                        Lock In
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-4">
+                                <div id="pm-in-container" class="transition-all">
+                                    <label class="data-grid-header block mb-2">PM In</label>
+                                    <div class="relative group/time">
+                                        <i data-lucide="coffee"
+                                            class="absolute left-4 top-1/2 -translate-y-1/2 text-cyan-400/50 w-5 h-5 pointer-events-none"></i>
+                                        <input type="time" id="pm-in"
+                                            class="w-full bg-white/5 border border-white/10 rounded-2xl pl-12 pr-14 py-3.5 focus:outline-none focus:ring-2 focus:ring-cyan-500/40 focus:border-cyan-500/50 transition-all text-stone-50 font-bold text-base tracking-widest [color-scheme:dark]"
+                                            oninput="checkLockVisibility('pm-in'); computeExpectedLogout()" required />
+                                        <button type="button" onclick="setFieldToNow('pm-in')"
+                                            class="absolute right-2 top-1/2 -translate-y-1/2 hover:scale-105 active:scale-95 transition-all"
+                                            title="Set to current time">
+                                            <span
+                                                class="flex items-center justify-center bg-stone-50 text-stone-950 font-black text-[10px] tracking-widest rounded-lg px-2 py-1 shadow-md">AUTO</span>
+                                        </button>
+                                    </div>
+                                    <button type="button" id="lock-pm-in" onclick="lockField('pm-in')"
+                                        class="hidden mt-2 w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-xs font-black uppercase tracking-widest hover:bg-cyan-500/20 transition-all">
+                                        <i data-lucide="lock" class="w-3.5 h-3.5"></i>
+                                        Lock In
+                                    </button>
+                                </div>
+                                <div id="pm-out-container" class="transition-all">
+                                    <label class="data-grid-header block mb-2">PM Out</label>
+                                    <div class="relative group/time">
+                                        <i data-lucide="moon"
+                                            class="absolute left-4 top-1/2 -translate-y-1/2 text-cyan-400/50 w-5 h-5 pointer-events-none"></i>
+                                        <input type="time" id="pm-out"
+                                            class="w-full bg-white/5 border border-white/10 rounded-2xl pl-12 pr-14 py-3.5 focus:outline-none focus:ring-2 focus:ring-cyan-500/40 focus:border-cyan-500/50 transition-all text-stone-50 font-bold text-base tracking-widest [color-scheme:dark]"
+                                            oninput="checkLockVisibility('pm-out')" required />
+                                        <button type="button" onclick="setFieldToNow('pm-out')"
+                                            class="absolute right-2 top-1/2 -translate-y-1/2 hover:scale-105 active:scale-95 transition-all"
+                                            title="Set to current time">
+                                            <span
+                                                class="flex items-center justify-center bg-stone-50 text-stone-950 font-black text-[10px] tracking-widest rounded-lg px-2 py-1 shadow-md">AUTO</span>
+                                        </button>
+                                    </div>
+                                    <button type="button" id="lock-pm-out" onclick="lockField('pm-out')"
+                                        class="hidden mt-2 w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-xs font-black uppercase tracking-widest hover:bg-cyan-500/20 transition-all">
+                                        <i data-lucide="lock" class="w-3.5 h-3.5"></i>
+                                        Lock In
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Expected Logout Banner -->
+                            <div id="expected-logout-banner" class="flex items-center justify-between gap-4 px-6 py-4 bg-amber-400/5 border border-amber-400/15 rounded-2xl">
+                                <div class="flex items-center gap-3">
+                                    <i data-lucide="alarm-clock" class="w-4 h-4 text-amber-400/60"></i>
+                                    <span class="text-[11px] font-black uppercase tracking-[0.25em] text-stone-500">Expected Logout</span>
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <span class="text-base font-black text-amber-400" id="expected-logout-time">—</span>
+                                    <span class="text-[10px] font-bold text-stone-600" id="expected-logout-note"></span>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center gap-3">
+                                <!-- Early Out Checkbox -->
+                                <div class="flex-1 flex items-center gap-4 p-6 bg-white/5 rounded-3xl border border-white/5">
+                                    <label class="flex items-center gap-4 cursor-pointer group w-full">
+                                        <div class="relative flex items-center">
+                                            <input type="checkbox" id="early-out"
+                                                class="peer appearance-none w-7 h-7 border-2 border-white/10 rounded-xl checked:bg-cyan-500 checked:border-cyan-500 transition-all cursor-pointer" />
+                                            <i data-lucide="check-circle-2"
+                                                class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-stone-950 w-4 h-4 opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none"></i>
+                                        </div>
+                                        <span
+                                            class="text-sm font-black text-stone-400 group-hover:text-cyan-400 transition-colors uppercase tracking-[0.2em]">Early Out</span>
+                                    </label>
+                                </div>
+                                <!-- Reset Button -->
+                                <button type="button" onclick="resetTimesForm()"
+                                    id="reset-times-btn"
+                                    title="Clear all login & logout times"
+                                    class="flex-1 flex items-center justify-center gap-2 p-6 bg-white/5 hover:bg-red-500/10 border border-white/5 hover:border-red-500/30 text-stone-500 hover:text-red-400 rounded-3xl transition-all duration-200 group">
+                                    <i data-lucide="rotate-ccw" class="w-4 h-4 transition-transform duration-300 group-hover:-rotate-45"></i>
+                                    <span class="text-sm font-black uppercase tracking-[0.2em]">Reset</span>
+                                </button>
+                            </div>
+
+                            <div class="flex gap-3 mt-4">
+                                <button type="submit"
+                                    class="w-full bg-cyan-500 hover:bg-cyan-400 active:scale-98 text-stone-950 font-black py-4 rounded-2xl transition-all shadow-2xl shadow-cyan-500/20 flex items-center justify-center gap-2 text-base">
+                                    <i data-lucide="plus" class="w-5 h-5"></i>
+                                    LOG SESSION
+                                </button>
+                            </div>
+                        </form>
+
+                        <!-- Previous Statistics Block -->
+                        <div class="mt-8 pt-6 border-t border-white/5 transition-opacity duration-700 hidden opacity-0 translate-y-[10px]" id="prev-stats-container">
+                            <h3 class="text-[10px] font-black uppercase tracking-[0.2em] text-stone-500 mb-4 flex items-center gap-2">
+                                <i data-lucide="history" class="w-3.5 h-3.5 text-cyan-400"></i>
+                                Previous Statistics
+                            </h3>
+                            <div class="grid grid-cols-3 gap-3">
+                                <div class="bg-stone-900/40 border border-white/5 rounded-2xl p-4 flex flex-col gap-1 hover:bg-stone-800/40 transition-colors">
+                                    <span class="text-[9px] font-black uppercase tracking-tight text-stone-500">Logins/Outs</span>
+                                    <span class="text-[11px] lg:text-[13px] font-black text-stone-200 mt-1 whitespace-nowrap" id="prev-stat-range">--:-- &ndash; --:--</span>
+                                    <span class="text-[9px] font-bold text-stone-600 tracking-widest mt-0.5 uppercase" id="prev-stat-date">—</span>
+                                </div>
+                                <div class="bg-stone-900/40 border border-white/5 rounded-2xl p-4 flex flex-col gap-1 hover:bg-stone-800/40 transition-colors justify-between">
+                                    <span class="text-[9px] font-black uppercase tracking-tight text-stone-500">Breaktime</span>
+                                    <div class="flex items-baseline gap-1 mt-1">
+                                        <span class="text-2xl font-black text-amber-400" id="prev-stat-break">0</span>
+                                        <span class="text-[9px] font-bold text-amber-400/60 uppercase tracking-widest">mins</span>
+                                    </div>
+                                </div>
+                                <div class="bg-stone-900/40 border border-white/5 rounded-2xl p-4 flex flex-col gap-1 hover:bg-stone-800/40 transition-colors justify-between">
+                                    <span class="text-[9px] font-black uppercase tracking-tight text-stone-500">Session Hrs</span>
+                                    <div class="flex items-baseline gap-1 mt-1">
+                                        <span class="text-2xl font-black text-emerald-400" id="prev-stat-session-hrs">0.00</span>
+                                        <span class="text-[9px] font-bold text-emerald-400/60 uppercase tracking-widest">hrs</span>
+                                    </div>
+                                </div>
+                                <div class="bg-stone-900/40 border border-white/5 rounded-2xl p-4 flex flex-col gap-1 col-span-3 hover:bg-stone-800/40 transition-colors">
+                                    <div class="flex justify-between items-center w-full mb-1">
+                                        <span class="text-[9px] font-black uppercase tracking-widest text-stone-500">Total Accumulated Hrs</span>
+                                        <span class="text-[9px] font-black text-cyan-400 tracking-widest bg-cyan-500/10 px-2 py-1 rounded-md" id="prev-stat-progress-pct">0.0%</span>
+                                    </div>
+                                    <div class="flex items-baseline gap-2">
+                                        <span class="text-3xl font-black text-cyan-400 tracking-tighter" id="prev-stat-accumulated">0.00</span>
+                                        <span class="text-[10px] font-bold text-stone-500 uppercase tracking-widest">hrs</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div><!-- end form card -->
+        </div><!-- end flex col container -->
+    </section>
+
+    <!-- Divider -->
+    <div class="section-divider"></div>
+
+    <!-- History Table Section -->
+    <section id="history" class="viewport-section">
+        <!-- History Table -->
+    <div class="opacity-0 transition-opacity duration-1000 delay-500" id="anim-history-table">
+        <div class="glass rounded-[3.5rem] overflow-hidden border border-white/5">
+            <div class="p-7 border-b border-white/5 flex items-center justify-between">
+                <button onclick="toggleHistoryTable()" class="flex items-center gap-3 text-left group">
+                    <i data-lucide="history" class="text-cyan-400 w-6 h-6 flex-shrink-0"></i>
+                    <h2 class="text-2xl font-sans font-black text-stone-50">Session History</h2>
+                    <i data-lucide="chevron-down" id="history-chevron"
+                        class="text-stone-500 group-hover:text-cyan-400 transition-all w-5 h-5 ml-1"></i>
+                </button>
+                <button id="export-pdf-btn"
+                    class="flex items-center gap-3 px-8 py-4 bg-white/5 hover:bg-white/10 text-stone-50 rounded-3xl text-sm font-black transition-all border border-white/5">
+                    <i data-lucide="download" class="w-5 h-5"></i>
+                    EXPORT DTR
+                </button>
+            </div>
+
+            <div id="history-table-wrapper" class="overflow-x-auto no-scrollbar transition-all duration-500">
+                <table class="w-full text-left">
+                    <thead>
+                        <tr class="border-b border-white/5">
+                            <th class="py-4 px-8 data-grid-header">Date</th>
+                            <th class="py-4 px-8 data-grid-header">AM Session</th>
+                            <th class="py-4 px-8 data-grid-header">PM Session</th>
+                            <th class="py-4 px-8 data-grid-header text-right">Total</th>
+                            <th class="py-4 px-8 data-grid-header text-right">Accumulated</th>
+                            <th class="py-4 px-8 data-grid-header text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-white/5" id="history-table-body">
+                        <!-- Rows rendered via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    </section>
+
+    <!-- Divider -->
+    <div class="section-divider"></div>
+
+    <!-- Analytics Section -->
+    <section id="analytics" class="viewport-section">
+        
+        <!-- KPI Metrics Row -->
+        <div class="grid grid-cols-2 gap-4 md:gap-8 mb-8 opacity-0 translate-y-[20px] transition-all duration-800 delay-300" id="anim-kpi-row">
+            <!-- Avg Per Day -->
+            <div class="bg-stone-900/40 backdrop-blur-3xl rounded-[2rem] p-6 border border-white/5 shadow-xl flex items-center justify-between group hover:bg-stone-800/40 transition-colors">
+                <div class="flex flex-col gap-1">
+                    <span class="text-[10px] md:text-xs font-black uppercase tracking-widest text-stone-500">Avg Per Day</span>
+                    <div class="flex items-baseline gap-1 md:gap-2">
+                        <span class="text-2xl md:text-3xl font-black text-stone-100" id="kpi-avg-day">0.00</span>
+                        <span class="text-xs md:text-sm font-bold text-stone-500">hrs</span>
+                    </div>
+                </div>
+                <div class="w-10 h-10 md:w-12 md:h-12 shrink-0 rounded-full bg-cyan-500/10 text-cyan-400 flex items-center justify-center group-hover:bg-cyan-500/20 group-hover:scale-110 transition-all">
+                    <i data-lucide="clock" class="w-5 h-5 md:w-6 md:h-6"></i>
+                </div>
+            </div>
+
+            <!-- Avg Per Month -->
+            <div class="bg-stone-900/40 backdrop-blur-3xl rounded-[2rem] p-6 border border-white/5 shadow-xl flex items-center justify-between group hover:bg-stone-800/40 transition-colors">
+                <div class="flex flex-col gap-1">
+                    <span class="text-[10px] md:text-xs font-black uppercase tracking-widest text-stone-500">Avg Per Month</span>
+                    <div class="flex items-baseline gap-1 md:gap-2">
+                        <span class="text-2xl md:text-3xl font-black text-stone-100" id="kpi-avg-month">0.00</span>
+                        <span class="text-xs md:text-sm font-bold text-stone-500">hrs</span>
+                    </div>
+                </div>
+                <div class="w-10 h-10 md:w-12 md:h-12 shrink-0 rounded-full bg-amber-500/10 text-amber-400 flex items-center justify-center group-hover:bg-amber-500/20 group-hover:scale-110 transition-all">
+                    <i data-lucide="calendar" class="w-5 h-5 md:w-6 md:h-6"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Extended KPIs Grid -->
+        <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-8 opacity-0 translate-y-[20px] transition-all duration-800 delay-400" id="anim-extended-kpis">
+            <div class="bg-stone-900/40 backdrop-blur-3xl rounded-[1.5rem] p-5 border border-white/5 shadow-xl flex flex-col justify-between group hover:bg-stone-800/40 transition-colors">
+                <span class="text-[9px] font-black uppercase tracking-widest text-stone-500 flex items-center gap-2 mb-2"><i data-lucide="log-in" class="w-3 h-3 text-cyan-400"></i>Avg Login</span>
+                <span class="text-xl font-black text-stone-100" id="kpi-avg-login">--:--</span>
+            </div>
+            <div class="bg-stone-900/40 backdrop-blur-3xl rounded-[1.5rem] p-5 border border-white/5 shadow-xl flex flex-col justify-between group hover:bg-stone-800/40 transition-colors">
+                <span class="text-[9px] font-black uppercase tracking-widest text-stone-500 flex items-center gap-2 mb-2"><i data-lucide="log-out" class="w-3 h-3 text-amber-400"></i>Avg Logout</span>
+                <span class="text-xl font-black text-stone-100" id="kpi-avg-logout">--:--</span>
+            </div>
+            <div class="bg-stone-900/40 backdrop-blur-3xl rounded-[1.5rem] p-5 border border-white/5 shadow-xl flex flex-col justify-between group hover:bg-stone-800/40 transition-colors">
+                <span class="text-[9px] font-black uppercase tracking-widest text-stone-500 flex items-center gap-2 mb-2"><i data-lucide="clock-4" class="w-3 h-3 text-orange-400"></i>Avg Late/mo</span>
+                <span class="text-xl font-black text-stone-100" id="kpi-avg-late">0.0</span>
+            </div>
+            <div class="bg-stone-900/40 backdrop-blur-3xl rounded-[1.5rem] p-5 border border-white/5 shadow-xl flex flex-col justify-between group hover:bg-stone-800/40 transition-colors">
+                <span class="text-[9px] font-black uppercase tracking-widest text-stone-500 flex items-center gap-2 mb-2"><i data-lucide="x-circle" class="w-3 h-3 text-red-400"></i>Avg Absent/mo</span>
+                <span class="text-xl font-black text-stone-100" id="kpi-avg-absent">0.0</span>
+            </div>
+            <div class="bg-stone-900/40 backdrop-blur-3xl rounded-[1.5rem] p-5 border border-white/5 shadow-xl flex flex-col justify-between group hover:bg-stone-800/40 transition-colors lg:col-span-1 col-span-2">
+                <span class="text-[9px] font-black uppercase tracking-widest text-stone-500 flex items-center gap-2 mb-2"><i data-lucide="alert-circle" class="w-3 h-3 text-violet-400"></i>Avg OT Hrs/mo</span>
+                <span class="text-xl font-black text-stone-100" id="kpi-avg-overtime">0.00</span>
+            </div>
+        </div>
+
+        <!-- Charts Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10 opacity-0 translate-y-[40px] transition-all duration-800 delay-500" id="anim-charts-grid">
+            <!-- Performance Overview -->
+            <div class="bg-stone-900/40 backdrop-blur-3xl rounded-[2.5rem] p-8 border border-white/5 flex flex-col items-center justify-center relative shadow-2xl">
+                <h3 class="text-xl font-sans font-black text-stone-50 mb-8 w-full flex items-center gap-3 relative z-10">
+                    <i data-lucide="pie-chart" class="text-cyan-400 w-5 h-5"></i>
+                    Performance Overview
+                </h3>
+                <div class="relative w-full aspect-square max-h-[280px] z-10 flex justify-center pb-2">
+                    <canvas id="performanceDonutChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Monthly Trend -->
+            <div class="bg-stone-900/40 backdrop-blur-3xl rounded-[2.5rem] p-8 border border-white/5 flex flex-col relative shadow-2xl">
+                <h3 class="text-xl font-sans font-black text-stone-50 mb-8 w-full flex items-center gap-3 relative z-10">
+                    <i data-lucide="bar-chart-2" class="text-amber-400 w-5 h-5"></i>
+                    Monthly Trend
+                </h3>
+                <div class="relative w-full h-[280px] z-10 flex-grow pb-2">
+                    <canvas id="monthlyBarChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+    <!-- Monthly Progress Summary -->
+    <div class="mt-0 space-y-12 opacity-0 translate-y-[40px] transition-all duration-800 delay-900"
+        id="anim-monthly-summary">
+        <div class="glass rounded-[3.5rem] overflow-hidden border border-white/5">
+            <div class="p-7 border-b border-white/5 flex items-center justify-between">
+                <h2 class="text-2xl font-sans font-black text-stone-50 flex items-center gap-3">
+                    <i data-lucide="trending-up" class="text-cyan-400 w-6 h-6"></i>
+                    Monthly Progress Timeline
+                </h2>
+                <button id="export-pdf-btn" class="px-6 py-2.5 bg-cyan-500 hover:bg-cyan-400 text-stone-950 text-xs font-black uppercase tracking-widest rounded-xl transition-all shadow-lg hover:-translate-y-1 flex items-center gap-2 active:scale-95">
+                    <i data-lucide="download" class="w-4 h-4 text-stone-900"></i> Export PDF
+                </button>
+            </div>
+            <div class="overflow-x-auto no-scrollbar">
+                <table class="w-full text-left">
+                    <thead>
+                        <tr class="border-b border-white/5">
+                            <th class="py-4 px-8 data-grid-header">Month</th>
+                            <th class="py-4 px-8 data-grid-header text-right">Total Hours</th>
+                            <th class="py-4 px-8 data-grid-header text-center">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-white/5" id="monthly-timeline-body">
+                        <!-- Rows rendered via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer
+        class="pb-12 border-t border-white/5 pt-8 flex flex-col md:flex-row justify-between items-center gap-6 opacity-0 transition-opacity duration-1000 delay-1000"
+        id="anim-footer">
+        <div class="flex items-center gap-4 text-stone-600">
+            <i data-lucide="clock" class="w-5 h-5"></i>
+            <span class="text-xs font-black uppercase tracking-[0.4em]">OJT Timekeeper Vanilla</span>
+        </div>
+        <p class="text-stone-500 text-sm font-medium italic text-center md:text-right">
+            "The only way to do great work is to love what you do."
+        </p>
+    </footer>
+</main>
+
+    <!-- Break Time Screen Saver -->
+    <div id="break-screen-saver" class="fixed inset-0 z-[100] flex flex-col items-center justify-center opacity-0 pointer-events-none transition-all duration-700 bg-stone-950/90 backdrop-blur-2xl">
+        <div class="absolute inset-0 overflow-hidden pointer-events-none">
+            <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-[100px] animate-pulse"></div>
+            <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-amber-500/10 rounded-full blur-[100px] animate-pulse" style="animation-delay: 2s;"></div>
+        </div>
+        
+        <div class="relative z-10 flex flex-col items-center gap-8 translate-y-8 transition-transform duration-700" id="bss-content">
+            <div class="flex flex-col items-center">
+                <div class="flex items-center gap-4 text-cyan-400 mb-2 animate-bounce" style="animation-duration: 3s;">
+                    <i data-lucide="coffee" class="w-10 h-10"></i>
+                    <h2 class="text-3xl font-sans font-black tracking-widest uppercase text-stone-50">On Break</h2>
+                </div>
+            </div>
+            
+            <div class="flex flex-col items-center text-center">
+                <div class="text-[10px] font-bold text-stone-600 uppercase tracking-widest mb-2">Philippine Time</div>
+                <div class="flex items-baseline gap-2">
+                    <div id="bss-clock" class="font-sans font-black text-stone-50 tracking-tighter leading-none" style="font-size: clamp(3rem, 8vw, 6rem);">00:00:00</div>
+                    <div id="bss-ampm" class="text-xl font-bold text-stone-500 uppercase tracking-[0.4em]">AM</div>
+                </div>
+            </div>
+
+            <!-- Stats Grid for Break -->
+            <div class="grid grid-cols-2 gap-3 w-full max-w-[42rem] mt-4">
+                <!-- Elapsed Time -->
+                <div class="bg-stone-900/60 border border-white/5 shadow-xl rounded-3xl p-5 flex flex-col items-center justify-center group transition-colors">
+                    <span class="text-[9px] font-black uppercase tracking-[0.2em] text-stone-500 mb-2 flex items-center gap-1.5">
+                        <i data-lucide="timer" class="w-3 h-3 text-cyan-500"></i>Elapsed
+                    </span>
+                    <span id="bss-elapsed-timer" class="text-3xl font-black text-cyan-400 tracking-tighter transition-colors tabular-nums">00:00</span>
+                    <span id="bss-warning" class="text-[9px] font-black text-red-100 uppercase tracking-widest mt-2 hidden bg-red-500 shadow-[0_0_15px_rgba(239,68,68,0.5)] px-2 py-0.5 rounded-md animate-pulse">Limit!</span>
+                </div>
+
+                <!-- Remaining Time -->
+                <div class="bg-stone-900/60 border border-white/5 shadow-xl rounded-3xl p-5 flex flex-col items-center justify-center relative overflow-hidden">
+                    <div id="bss-remaining-arc" class="absolute inset-0 opacity-10 pointer-events-none" style="background: conic-gradient(#22d3ee 0%, transparent 0%); border-radius: 1.5rem;"></div>
+                    <span class="text-[9px] font-black uppercase tracking-[0.2em] text-stone-500 mb-2 flex items-center gap-1.5 relative z-10">
+                        <i data-lucide="hourglass" class="w-3 h-3 text-emerald-500"></i>Remaining
+                    </span>
+                    <span id="bss-remaining-timer" class="text-3xl font-black text-emerald-400 tracking-tighter tabular-nums relative z-10 transition-colors">60:00</span>
+                    <span id="bss-remaining-label" class="text-[9px] font-bold text-stone-600 mt-1 uppercase tracking-widest relative z-10">of 60 min</span>
+                </div>
+
+                <!-- Est. PM Login -->
+                <div class="bg-stone-900/60 border border-white/5 shadow-xl rounded-3xl p-5 flex flex-col items-center justify-center">
+                    <span class="text-[9px] font-black uppercase tracking-[0.2em] text-stone-500 mb-2 flex items-center gap-1.5">
+                        <i data-lucide="log-in" class="w-3 h-3 text-sky-400"></i>PM Login
+                    </span>
+                    <span id="bss-expected-pm-in" class="text-2xl font-black text-sky-400 tracking-wide">—</span>
+                    <span class="text-[9px] font-bold text-stone-600 mt-1 uppercase tracking-widest">expected</span>
+                </div>
+
+                <!-- Est. PM Logout -->
+                <div class="bg-stone-900/60 border border-white/5 shadow-xl rounded-3xl p-5 flex flex-col items-center justify-center">
+                    <span class="text-[9px] font-black uppercase tracking-[0.2em] text-stone-500 mb-2 flex items-center gap-1.5">
+                        <i data-lucide="alarm-clock" class="w-3 h-3 text-amber-500"></i>PM Logout
+                    </span>
+                    <span id="bss-expected-pm" class="text-2xl font-black text-amber-400 tracking-wide">—</span>
+                    <span class="text-[9px] font-bold text-stone-600 mt-1 uppercase tracking-widest">expected</span>
+                </div>
+            </div>
+
+            <button onclick="hideScreenSaver()" class="mt-8 group relative px-10 py-5 bg-transparent overflow-hidden rounded-full border border-stone-800 hover:border-emerald-500/50 transition-colors">
+                <div class="absolute inset-0 bg-stone-50 transition-transform duration-500 rounded-full group-hover:scale-105 group-hover:bg-emerald-400"></div>
+                <div class="relative z-10 flex items-center gap-3 text-stone-950 font-black tracking-[0.2em] uppercase text-sm">
+                    <i data-lucide="play" class="w-5 h-5"></i>
+                    Resume Work
+                </div>
+            </button>
+        </div>
+    </div>
+
+    <!-- Custom Dialog Modal -->
+    <div id="custom-dialog"
+        class="fixed inset-0 z-50 flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300">
+        <div class="absolute inset-0 bg-stone-950/80 backdrop-blur-sm" onclick="closeDialog()"></div>
+        <div class="glass relative p-8 md:p-10 rounded-[2.5rem] max-w-sm w-full mx-4 shadow-2xl border border-white/10 transform scale-95 transition-transform duration-300"
+            id="custom-dialog-content">
+            <div class="flex items-center gap-4 mb-6 text-amber-400">
+                <i data-lucide="alert-circle" class="w-8 h-8"></i>
+                <h3 class="text-2xl font-sans font-black text-stone-50" id="custom-dialog-title">Notice</h3>
+            </div>
+            <p class="text-stone-300 font-medium mb-8 text-lg whitespace-pre-wrap" id="custom-dialog-message">Message goes here.</p>
+            <div class="flex justify-end mt-4">
+                <button onclick="closeDialog()"
+                    class="px-8 py-4 bg-cyan-500 hover:bg-cyan-400 text-stone-950 font-black rounded-2xl transition-all shadow-lg hover:-translate-y-1 active:scale-95">
+                    OK
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Calendar Session Details Dialog Modal -->
+    <div id="calendar-dialog"
+        class="fixed inset-0 z-50 flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300">
+        <div class="absolute inset-0 bg-stone-950/80 backdrop-blur-sm" onclick="closeCalendarDialog()"></div>
+        <div class="glass relative p-8 md:p-10 rounded-[2.5rem] max-w-sm w-full mx-4 shadow-2xl border border-white/10 transform scale-95 transition-transform duration-300"
+            id="calendar-dialog-content">
+            <div class="flex items-center gap-4 mb-6 text-cyan-400">
+                <i data-lucide="calendar-check" class="w-8 h-8"></i>
+                <h3 class="text-2xl font-sans font-black text-stone-50" id="calendar-dialog-title">Session Details</h3>
+            </div>
+            <div id="calendar-dialog-body" class="text-stone-300 font-medium mb-8 text-sm whitespace-pre-wrap leading-relaxed">
+            </div>
+            <div class="flex justify-end mt-4">
+                <button onclick="closeCalendarDialog()"
+                    class="px-8 py-4 bg-white/5 hover:bg-white/10 text-stone-300 font-black rounded-2xl transition-all shadow-lg active:scale-95">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Dialog Modal -->
+    <div id="edit-dialog"
+        class="fixed inset-0 z-50 flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300">
+        <div class="absolute inset-0 bg-stone-950/80 backdrop-blur-sm" onclick="closeEditDialog()"></div>
+        <div class="glass relative p-8 md:p-10 rounded-[2.5rem] max-w-md w-full mx-4 shadow-2xl border border-white/10 transform scale-95 transition-transform duration-300"
+            id="edit-dialog-content">
+            <div class="flex items-center justify-between mb-8">
+                <div class="flex items-center gap-4 text-emerald-400">
+                    <i data-lucide="edit-3" class="w-8 h-8"></i>
+                    <h3 class="text-2xl font-sans font-black text-stone-50">Edit Session</h3>
+                </div>
+                <button onclick="closeEditDialog()" class="text-stone-500 hover:text-stone-300 transition-colors">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+
+            <form id="edit-log-form" class="space-y-6">
+                <input type="hidden" id="edit-log-id" />
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="data-grid-header block mb-3">AM In</label>
+                        <input type="time" id="edit-am-in"
+                            class="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500/50 transition-all text-stone-50 font-bold [color-scheme:dark]"
+                            required />
+                    </div>
+                    <div>
+                        <label class="data-grid-header block mb-3">AM Out</label>
+                        <input type="time" id="edit-am-out"
+                            class="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500/50 transition-all text-stone-50 font-bold [color-scheme:dark]"
+                            required />
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="data-grid-header block mb-3 text-stone-400">PM In <span
+                                class="lowercase text-[10px] normal-case tracking-normal">(optional)</span></label>
+                        <input type="time" id="edit-pm-in"
+                            class="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500/50 transition-all text-stone-50 font-bold [color-scheme:dark]" />
+                    </div>
+                    <div>
+                        <label class="data-grid-header block mb-3 text-stone-400">PM Out <span
+                                class="lowercase text-[10px] normal-case tracking-normal">(optional)</span></label>
+                        <input type="time" id="edit-pm-out"
+                            class="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500/50 transition-all text-stone-50 font-bold [color-scheme:dark]" />
+                    </div>
+                </div>
+
+                <div class="flex justify-end mt-8 gap-3">
+                    <button type="button" onclick="closeEditDialog()"
+                        class="px-6 py-4 bg-white/5 hover:bg-white/10 text-stone-300 font-bold rounded-2xl transition-all">Cancel</button>
+                    <button type="submit"
+                        class="px-8 py-4 bg-emerald-500 hover:bg-emerald-400 text-stone-950 font-black rounded-2xl transition-all shadow-lg hover:-translate-y-1 active:scale-95">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- Core JavaScript -->
+    <script>
+        // Constants (from React App.tsx)
+        const TARGET_HOURS = 486;
+        const START_DATE = new Date('2026-01-20');
+        const DAILY_QUOTA = 8;
+
+        const HOLIDAYS_2026 = {
+            '2026-03-18': 'Panay Liberation Day',
+            '2026-03-20': 'Eid al-Fitr',
+            '2026-04-02': 'Maundy Thursday',
+            '2026-04-03': 'Good Friday',
+            '2026-04-09': 'Araw ng Kagitingan',
+        };
+
+        // State
+        let logs = [];
+        let userName = 'Mel Joseph Tatud';
+        let userProgram = 'BSIT';
+        let userSection = '4A';
+        let expandedMonth = null;
+
+        let overtimeStatusObj = JSON.parse(localStorage.getItem('ojt_overtime_status')) || { date: null, confirmed: null };
+        
+        window.confirmOvertime = function(isOvertime) {
+            const todayStrTz = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Manila' });
+            overtimeStatusObj = { date: todayStrTz, confirmed: isOvertime };
+            localStorage.setItem('ojt_overtime_status', JSON.stringify(overtimeStatusObj));
+            updateOvertimeBannerUI();
+        };
+
+        function updateOvertimeBannerUI() {
+            const banner = document.getElementById('overtime-banner-container');
+            const msg = document.getElementById('overtime-status-msg');
+            const btns = document.getElementById('overtime-action-btns');
+            if (!banner || !msg || !btns) return;
+            
+            if (overtimeStatusObj.confirmed === true) {
+                msg.textContent = "Overtime Confirmed! Rules are in effect.";
+                msg.className = "text-emerald-400 text-xs font-bold mt-1";
+                btns.classList.add('hidden');
+            } else if (overtimeStatusObj.confirmed === false) {
+                msg.textContent = "Overtime Declined. Standard 8-hour capping applied.";
+                msg.className = "text-amber-400 text-xs font-bold mt-1";
+                btns.classList.add('hidden');
+            } else {
+                msg.textContent = "It's past 4:00 PM. Are you rendering overtime today?";
+                msg.className = "text-stone-400 text-xs mt-1 leading-relaxed";
+                btns.classList.remove('hidden');
+            }
+        }
+
+        // Ensure lucide renders immediately
+        lucide.createIcons();
+
+        // Toggle History Table
+        let historyCollapsed = false;
+        window.toggleHistoryTable = function () {
+            historyCollapsed = !historyCollapsed;
+            const wrapper = document.getElementById('history-table-wrapper');
+            const chevron = document.getElementById('history-chevron');
+            if (historyCollapsed) {
+                wrapper.style.maxHeight = '0';
+                wrapper.style.overflow = 'hidden';
+                chevron.style.transform = 'rotate(-90deg)';
+            } else {
+                wrapper.style.maxHeight = wrapper.scrollHeight + 'px';
+                wrapper.style.overflow = 'auto';
+                chevron.style.transform = 'rotate(0deg)';
+            }
+        }
+
+        // Lock In Feature
+        window.checkLockVisibility = function (inputId) {
+            const input = document.getElementById(inputId);
+            const lockBtn = document.getElementById(`lock-${inputId}`);
+            if (!input || !lockBtn) return;
+            if (input.value && !input.disabled) {
+                lockBtn.classList.remove('hidden');
+                lucide.createIcons();
+            } else {
+                lockBtn.classList.add('hidden');
+            }
+        }
+
+        window.lockField = function (inputId) {
+            const input = document.getElementById(inputId);
+            const lockBtn = document.getElementById(`lock-${inputId}`);
+            if (!input || !lockBtn) return;
+
+            // Lock the input
+            input.disabled = true;
+            input.classList.add('opacity-50', 'cursor-not-allowed');
+
+            // Grey out the button to show locked state
+            lockBtn.disabled = true;
+            lockBtn.innerHTML = `<i data-lucide="lock" class="w-3.5 h-3.5"></i> Locked`;
+            lockBtn.classList.remove('bg-cyan-500/10', 'border-cyan-500/20', 'text-cyan-400', 'hover:bg-cyan-500/20');
+            lockBtn.classList.add('bg-stone-800/60', 'border-stone-700/30', 'text-stone-600', 'cursor-not-allowed');
+            lucide.createIcons();
+        }
+
+        window.unlockAllFields = function () {
+            ['am-in', 'am-out', 'pm-in', 'pm-out'].forEach(id => {
+                const input = document.getElementById(id);
+                const lockBtn = document.getElementById(`lock-${id}`);
+                if (input) {
+                    input.disabled = false;
+                    input.classList.remove('opacity-50', 'cursor-not-allowed');
+                }
+                if (lockBtn) {
+                    lockBtn.disabled = false;
+                    lockBtn.classList.add('hidden');
+                    lockBtn.classList.remove('bg-stone-800/60', 'border-stone-700/30', 'text-stone-600', 'cursor-not-allowed');
+                    lockBtn.classList.add('bg-cyan-500/10', 'border-cyan-500/20', 'text-cyan-400', 'hover:bg-cyan-500/20');
+                    lockBtn.innerHTML = `<i data-lucide="lock" class="w-3.5 h-3.5"></i> Lock In`;
+                }
+            });
+            lucide.createIcons();
+        }
+
+        // Toggle Actual Hours Reveal Row
+        window.toggleActualHours = function (rowId) {
+            const row = document.getElementById(rowId);
+            if (!row) return;
+            row.classList.toggle('hidden');
+            lucide.createIcons();
+        }
+
+        // Dialog Handlers
+        window.showDialog = function (title, message) {
+            document.getElementById('custom-dialog-title').innerText = title;
+            document.getElementById('custom-dialog-message').innerText = message;
+            const dialog = document.getElementById('custom-dialog');
+            const content = document.getElementById('custom-dialog-content');
+
+            dialog.classList.remove('opacity-0', 'pointer-events-none');
+            content.classList.remove('scale-95');
+            content.classList.add('scale-100');
+
+            // Re-render icons since the DOM might have updated
+            lucide.createIcons();
+        }
+
+        window.closeDialog = function () {
+            const dialog = document.getElementById('custom-dialog');
+            const content = document.getElementById('custom-dialog-content');
+
+            dialog.classList.add('opacity-0', 'pointer-events-none');
+            content.classList.remove('scale-100');
+            content.classList.add('scale-95');
+        }
+
+        window.closeCalendarDialog = function () {
+            const dialog = document.getElementById('calendar-dialog');
+            const content = document.getElementById('calendar-dialog-content');
+            dialog.classList.add('opacity-0', 'pointer-events-none');
+            content.classList.remove('scale-100');
+            content.classList.add('scale-95');
+        };
+
+        window.showCalendarSessionDetails = function (dateStr) {
+            const log = logs.find(l => l.date === dateStr);
+            const titleEl = document.getElementById('calendar-dialog-title');
+            const bodyEl = document.getElementById('calendar-dialog-body');
+            
+            const dateObj = new Date(dateStr);
+            const prettyDate = dateObj.toLocaleDateString('en-PH', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            
+            titleEl.textContent = dateObj.toLocaleDateString('en-PH', { month: 'short', day: 'numeric' });
+
+            if (!log) {
+                const dow = dateObj.getDay();
+                const isWeekend = dow === 0 || dow === 6;
+                const isHoliday = dateStr in HOLIDAYS_2026;
+                const isPast = dateObj < new Date(new Date().setHours(0,0,0,0));
+                
+                let msg = "No session logged.";
+                if (isHoliday) msg = HOLIDAYS_2026[dateStr];
+                else if (isWeekend) msg = "Weekend";
+                else if (isPast) msg = "Absent";
+
+                bodyEl.innerHTML = `<div class="text-center py-4"><span class="text-lg font-black text-stone-500 uppercase tracking-widest">${msg}</span></div>`;
+            } else {
+                const format12H = (timeStr) => {
+                    if (!timeStr) return '--:--';
+                    const [h, m] = timeStr.split(':').map(Number);
+                    return `${String(h % 12 || 12).padStart(2, '0')}:${String(m).padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'}`;
+                };
+
+                let actualBreakMinutes = 0;
+                if (!log.isEarlyOut && log.pmIn && log.amOut) {
+                    const [amH, amM] = log.amOut.split(':').map(Number);
+                    const [pmH, pmM] = log.pmIn.split(':').map(Number);
+                    actualBreakMinutes = (pmH * 60 + pmM) - (amH * 60 + amM);
+                    actualBreakMinutes = Math.max(0, actualBreakMinutes);
+                }
+
+                let tags = [];
+                if (log.amIn <= '07:00') tags.push("On-Time/Early");
+                else tags.push("Late");
+                if (log.isOvertime) tags.push("Overtime");
+
+                bodyEl.innerHTML = `
+                    <div class="space-y-3">
+                        <div class="flex justify-between border-b border-white/5 pb-2">
+                            <span class="text-stone-500 uppercase tracking-widest text-[10px] font-black mt-1">Date</span>
+                            <span class="text-stone-300 font-bold">${prettyDate}</span>
+                        </div>
+                        <div class="flex justify-between border-b border-white/5 pb-2">
+                            <span class="text-stone-500 uppercase tracking-widest text-[10px] font-black mt-1">Morning</span>
+                            <span class="text-stone-300 font-bold">${format12H(log.amIn)} &ndash; ${format12H(log.amOut)}</span>
+                        </div>
+                        <div class="flex justify-between border-b border-white/5 pb-2">
+                            <span class="text-stone-500 uppercase tracking-widest text-[10px] font-black mt-1">Afternoon</span>
+                            <span class="text-stone-300 font-bold">${log.isEarlyOut ? '<i class="text-stone-500">Early Out</i>' : `${format12H(log.pmIn)} &ndash; ${format12H(log.pmOut)}`}</span>
+                        </div>
+                        <div class="flex justify-between border-b border-white/5 pb-2">
+                            <span class="text-stone-500 uppercase tracking-widest text-[10px] font-black mt-1">Break Time</span>
+                            <span class="text-stone-300 font-bold">${log.isEarlyOut ? '--' : `${actualBreakMinutes} mins`}</span>
+                        </div>
+                        <div class="flex justify-between border-b border-white/5 pb-2">
+                            <span class="text-stone-500 uppercase tracking-widest text-[10px] font-black mt-1">Status</span>
+                            <span class="text-cyan-400 font-black">${tags.join(' | ')}</span>
+                        </div>
+                        <div class="flex justify-between pt-2 items-center">
+                            <span class="text-stone-500 uppercase tracking-widest text-[10px] font-black">Total</span>
+                            <span class="text-amber-400 font-black text-2xl">${log.dailyTotal.toFixed(2)} <span class="text-sm text-stone-500">hrs</span></span>
+                        </div>
+                    </div>
+                `;
+            }
+
+            const dialog = document.getElementById('calendar-dialog');
+            const content = document.getElementById('calendar-dialog-content');
+            dialog.classList.remove('opacity-0', 'pointer-events-none');
+            content.classList.remove('scale-95');
+            content.classList.add('scale-100');
+            lucide.createIcons();
+        }
+
+        // Break Timer State
+        let breakInterval = null;
+        let breakStartMs = null;
+
+        function startBreakTimer() {
+            const amInVal = document.getElementById('am-in').value;
+            const amOutVal = document.getElementById('am-out').value;
+            if(!amOutVal || !amInVal) return;
+
+            const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Manila' });
+            breakStartMs = new Date(`${todayStr}T${amOutVal}:00`).getTime();
+
+            // --- Effective AM In (capped at 07:00) ---
+            const effectiveAmIn = amInVal < '07:00' ? '07:00' : amInVal;
+            const [sH, sM] = effectiveAmIn.split(':').map(Number);
+            const [amOutH, amOutM] = amOutVal.split(':').map(Number);
+
+            // PM Login = AM Out + 60 minutes (standard 1-hour break)
+            const pmInTotalMins = amOutH * 60 + amOutM + 60;
+            const pmInH = Math.floor(pmInTotalMins / 60) % 24;
+            const pmInM = pmInTotalMins % 60;
+            const pmInH12 = pmInH % 12 || 12;
+            const pmInAmpm = pmInH >= 12 ? 'PM' : 'AM';
+
+            // PM Logout = AM In (effective) + 9 h (8h work + 1h break)
+            const pmOutTotalMins = (sH + 9) * 60 + sM;
+            const pmOutH = Math.floor(pmOutTotalMins / 60) % 24;
+            const pmOutM = pmOutTotalMins % 60;
+            const pmOutH12 = pmOutH % 12 || 12;
+            const pmOutAmpm = pmOutH >= 12 ? 'PM' : 'AM';
+
+            const fmt = (h12, m, ampm) => `${String(h12).padStart(2,'0')}:${String(m).padStart(2,'0')} ${ampm}`;
+
+            const bssPmIn = document.getElementById('bss-expected-pm-in');
+            if(bssPmIn) bssPmIn.innerText = fmt(pmInH12, pmInM, pmInAmpm);
+
+            const bssPmOut = document.getElementById('bss-expected-pm');
+            if(bssPmOut) bssPmOut.innerText = fmt(pmOutH12, pmOutM, pmOutAmpm);
+
+            if(breakInterval) clearInterval(breakInterval);
+            updateBreakTimerDisplay();
+            breakInterval = setInterval(updateBreakTimerDisplay, 1000);
+
+            showScreenSaver();
+        }
+
+        function updateBreakTimerDisplay() {
+            if(!breakStartMs) return;
+            const now = Date.now();
+            let elapsedMs = now - breakStartMs;
+            if(elapsedMs < 0) elapsedMs = 0;
+
+            const elapsedTotalSecs = Math.floor(elapsedMs / 1000);
+            const elapsedMins = Math.floor(elapsedTotalSecs / 60);
+            const elapsedSecs = elapsedTotalSecs % 60;
+
+            // --- Elapsed Timer ---
+            const timerEl = document.getElementById('bss-elapsed-timer');
+            if(timerEl) {
+                timerEl.innerText = `${String(elapsedMins).padStart(2, '0')}:${String(elapsedSecs).padStart(2, '0')}`;
+            }
+
+            // --- Remaining Timer (60-min break limit countdown) ---
+            const BREAK_LIMIT_SECS = 60 * 60; // 60 minutes in seconds
+            const remainingSecs = Math.max(0, BREAK_LIMIT_SECS - elapsedTotalSecs);
+            const remainingMins = Math.floor(remainingSecs / 60);
+            const remainingDispSecs = remainingSecs % 60;
+
+            const remainingEl = document.getElementById('bss-remaining-timer');
+            const remainingLabelEl = document.getElementById('bss-remaining-label');
+            const arcEl = document.getElementById('bss-remaining-arc');
+
+            if(remainingEl) {
+                remainingEl.innerText = `${String(remainingMins).padStart(2, '0')}:${String(remainingDispSecs).padStart(2, '0')}`;
+                if(remainingSecs === 0) {
+                    remainingEl.classList.add('text-red-400', 'animate-pulse');
+                    remainingEl.classList.remove('text-emerald-400');
+                    if(remainingLabelEl) remainingLabelEl.textContent = 'Time\'s up!';
+                } else if(remainingMins < 5) {
+                    remainingEl.classList.add('text-orange-400');
+                    remainingEl.classList.remove('text-emerald-400', 'text-red-400', 'animate-pulse');
+                    if(remainingLabelEl) remainingLabelEl.textContent = 'Almost done!';
+                } else {
+                    remainingEl.classList.add('text-emerald-400');
+                    remainingEl.classList.remove('text-orange-400', 'text-red-400', 'animate-pulse');
+                    if(remainingLabelEl) remainingLabelEl.textContent = 'of 60 min';
+                }
+            }
+
+            // Update arc background: show progress of break consumed
+            if(arcEl) {
+                const pct = Math.min(100, (elapsedTotalSecs / BREAK_LIMIT_SECS) * 100);
+                const color = remainingMins < 5 ? '#f97316' : '#22d3ee';
+                arcEl.style.background = `conic-gradient(${color} ${pct}%, transparent ${pct}%)`;
+            }
+
+            // --- Warning for elapsed ---
+            const warnEl = document.getElementById('bss-warning');
+            if(elapsedMins >= 60) {
+                if(warnEl) warnEl.classList.remove('hidden');
+                if(timerEl) timerEl.classList.add('text-red-500', 'animate-pulse');
+                if(timerEl) timerEl.classList.remove('text-cyan-400');
+            } else {
+                if(warnEl) warnEl.classList.add('hidden');
+                if(timerEl) timerEl.classList.remove('text-red-500', 'animate-pulse');
+                if(timerEl) timerEl.classList.add('text-cyan-400');
+            }
+        }
+
+        // Screen Saver Handlers
+        window.showScreenSaver = function () {
+            const screenSaver = document.getElementById('break-screen-saver');
+            const content = document.getElementById('bss-content');
+            if (!screenSaver || !content) return;
+            screenSaver.classList.remove('opacity-0', 'pointer-events-none');
+            content.classList.remove('translate-y-8');
+            content.classList.add('translate-y-0');
+            lucide.createIcons();
+        }
+
+        window.hideScreenSaver = function () {
+            const screenSaver = document.getElementById('break-screen-saver');
+            const content = document.getElementById('bss-content');
+            if (!screenSaver || !content) return;
+            screenSaver.classList.add('opacity-0', 'pointer-events-none');
+            content.classList.remove('translate-y-0');
+            content.classList.add('translate-y-8');
+            
+            if(breakInterval) {
+                clearInterval(breakInterval);
+                breakInterval = null;
+            }
+
+            // Auto-fill PM Login
+            const pmIn = document.getElementById('pm-in');
+            if (pmIn && !pmIn.disabled) {
+                const now = new Date();
+                pmIn.value = now.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
+                if (typeof checkLockVisibility === 'function') checkLockVisibility('pm-in');
+                if (typeof computeExpectedLogout === 'function') computeExpectedLogout();
+            }
+        }
+
+        // Auto-Fill Time Feature
+        window.setFieldToNow = function (inputId) {
+            const field = document.getElementById(inputId);
+            if (!field) return;
+
+            const now = new Date();
+            field.value = now.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
+            checkLockVisibility(inputId);
+            computeExpectedLogout();
+        }
+
+        // Reset all time fields and Early Out checkbox
+        window.resetTimesForm = function () {
+            ['am-in', 'am-out', 'pm-in', 'pm-out'].forEach(id => {
+                const input = document.getElementById(id);
+                if (input) input.value = '';
+            });
+
+            // Uncheck Early Out
+            const earlyOut = document.getElementById('early-out');
+            if (earlyOut) {
+                earlyOut.checked = false;
+                earlyOut.dispatchEvent(new Event('change'));
+            }
+
+            // Unlock any locked fields
+            if (typeof unlockAllFields === 'function') unlockAllFields();
+
+            // Clear expected logout display
+            const timeEl = document.getElementById('expected-logout-time');
+            const noteEl = document.getElementById('expected-logout-note');
+            if (timeEl) timeEl.textContent = '—';
+            if (noteEl) noteEl.textContent = '';
+
+            // Hide lock buttons (values are now empty)
+            ['am-in', 'am-out', 'pm-in', 'pm-out'].forEach(id => {
+                const lockBtn = document.getElementById(`lock-${id}`);
+                if (lockBtn) lockBtn.classList.add('hidden');
+            });
+
+            lucide.createIcons();
+        }
+
+        // Expected Logout Calculator
+        window.computeExpectedLogout = function () {
+            const amIn  = document.getElementById('am-in')?.value;
+            const amOut = document.getElementById('am-out')?.value;
+            const pmIn  = document.getElementById('pm-in')?.value;
+            const timeEl = document.getElementById('expected-logout-time');
+            const noteEl = document.getElementById('expected-logout-note');
+            if (!timeEl) return;
+
+            if (!amIn || !amOut || !pmIn) {
+                timeEl.textContent = '—';
+                if (noteEl) noteEl.textContent = '';
+                return;
+            }
+
+            // Effective AM In (capped at 07:00, same rule as log save)
+            const effectiveAmIn = amIn < '07:00' ? '07:00' : amIn;
+            const amHours = Math.max(0, (() => {
+                const [sH, sM] = effectiveAmIn.split(':').map(Number);
+                const [eH, eM] = amOut.split(':').map(Number);
+                return ((eH * 60 + eM) - (sH * 60 + sM)) / 60;
+            })());
+
+            const remainingHours = Math.max(0, DAILY_QUOTA - amHours);
+
+            // Expected PM Out = PM In + remaining hours
+            const [pH, pM] = pmIn.split(':').map(Number);
+            const totalMins = pH * 60 + pM + Math.round(remainingHours * 60);
+            const outH = Math.floor(totalMins / 60) % 24;
+            const outM = totalMins % 60;
+            const outH12 = outH % 12 || 12;
+            const ampm = outH >= 12 ? 'PM' : 'AM';
+            timeEl.textContent = `${String(outH12).padStart(2,'0')}:${String(outM).padStart(2,'0')} ${ampm}`;
+            if (noteEl) noteEl.textContent = `${remainingHours.toFixed(2)}h PM session`;
+        }
+
+        // --- Lock-In Field System ---
+        const LOCK_FIELDS = ['am-in', 'am-out', 'pm-in', 'pm-out'];
+
+        function getLockKey(fieldId) {
+            const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Manila' });
+            return `ojt_lock_${fieldId}_${todayStr}`;
+        }
+
+        // Show/hide the Lock-In button based on whether the field has a value
+        window.checkLockVisibility = function (fieldId) {
+            const field = document.getElementById(fieldId);
+            const lockBtn = document.getElementById(`lock-${fieldId}`);
+            if (!field || !lockBtn) return;
+            if (field.value && !field.disabled) {
+                lockBtn.classList.remove('hidden');
+            } else if (!field.disabled) {
+                lockBtn.classList.add('hidden');
+            }
+        }
+
+        // Lock a field: persist value to localStorage, disable input, update button
+        window.lockField = function (fieldId) {
+            const field = document.getElementById(fieldId);
+            const lockBtn = document.getElementById(`lock-${fieldId}`);
+            if (!field || !lockBtn || !field.value) return;
+
+            const isLocked = field.disabled;
+
+            if (isLocked) {
+                // Unlock it
+                localStorage.removeItem(getLockKey(fieldId));
+                field.disabled = false;
+                field.classList.remove('opacity-60', 'cursor-not-allowed', 'bg-cyan-500/5', 'border-cyan-500/30');
+                lockBtn.innerHTML = `<i data-lucide="lock" class="w-3.5 h-3.5"></i> Lock In`;
+                lockBtn.classList.remove('bg-cyan-500/20', 'border-cyan-400/40', 'text-cyan-300');
+                lockBtn.classList.add('bg-cyan-500/10', 'border-cyan-500/20', 'text-cyan-400');
+                lucide.createIcons();
+            } else {
+                // Lock it
+                localStorage.setItem(getLockKey(fieldId), field.value);
+                field.disabled = true;
+                field.classList.add('opacity-60', 'cursor-not-allowed', 'bg-cyan-500/5', 'border-cyan-500/30');
+                lockBtn.innerHTML = `<i data-lucide="lock-open" class="w-3.5 h-3.5"></i> Locked – Tap to Unlock`;
+                lockBtn.classList.add('bg-cyan-500/20', 'border-cyan-400/40', 'text-cyan-300');
+                lockBtn.classList.remove('bg-cyan-500/10', 'border-cyan-500/20', 'text-cyan-400');
+                lockBtn.classList.remove('hidden');
+                lucide.createIcons();
+                
+                // Show Break Screen Saver whenever any field is locked
+                startBreakTimer();
+
+                // Refresh calendar to reflect punch-in state
+                if(typeof renderCalendar === 'function') renderCalendar();
+            }
+        }
+
+        // Clear all locks (called on form Reset)
+        window.unlockAllFields = function () {
+            LOCK_FIELDS.forEach(fieldId => {
+                localStorage.removeItem(getLockKey(fieldId));
+                const field = document.getElementById(fieldId);
+                const lockBtn = document.getElementById(`lock-${fieldId}`);
+                if (field) {
+                    field.disabled = false;
+                    field.classList.remove('opacity-60', 'cursor-not-allowed', 'bg-cyan-500/5', 'border-cyan-500/30');
+                }
+                if (lockBtn) {
+                    lockBtn.innerHTML = `<i data-lucide="lock" class="w-3.5 h-3.5"></i> Lock In`;
+                    lockBtn.classList.remove('bg-cyan-500/20', 'border-cyan-400/40', 'text-cyan-300');
+                    lockBtn.classList.add('bg-cyan-500/10', 'border-cyan-500/20', 'text-cyan-400');
+                    lockBtn.classList.add('hidden');
+                }
+            });
+            lucide.createIcons();
+        }
+
+        // Restore locked fields from localStorage on page load
+        function restoreLockedFields() {
+            LOCK_FIELDS.forEach(fieldId => {
+                const saved = localStorage.getItem(getLockKey(fieldId));
+                if (saved) {
+                    const field = document.getElementById(fieldId);
+                    const lockBtn = document.getElementById(`lock-${fieldId}`);
+                    if (field) {
+                        field.value = saved;
+                        field.disabled = true;
+                        field.classList.add('opacity-60', 'cursor-not-allowed', 'bg-cyan-500/5', 'border-cyan-500/30');
+                    }
+                    if (lockBtn) {
+                        lockBtn.innerHTML = `<i data-lucide="lock-open" class="w-3.5 h-3.5"></i> Locked – Tap to Unlock`;
+                        lockBtn.classList.add('bg-cyan-500/20', 'border-cyan-400/40', 'text-cyan-300');
+                        lockBtn.classList.remove('bg-cyan-500/10', 'border-cyan-500/20', 'text-cyan-400', 'hidden');
+                    }
+                }
+            });
+            lucide.createIcons();
+        }
+
+        // Utility: Calculate decimal hours
+        function calculateHours(start, end) {
+            if (!start || !end) return 0;
+            const [sH, sM] = start.split(':').map(Number);
+            const [eH, eM] = end.split(':').map(Number);
+            const diff = (eH * 60 + eM) - (sH * 60 + sM);
+            return Math.max(0, diff / 60);
+        }
+
+        // Initialize App
+        function initApp() {
+            // Load from localStorage
+            const savedUserName = localStorage.getItem('ojt_user_name');
+            if (savedUserName) userName = savedUserName;
+            document.getElementById('user-name-input').value = userName;
+
+            const savedProgram = localStorage.getItem('ojt_user_program');
+            if (savedProgram) userProgram = savedProgram;
+            document.getElementById('user-program-input').value = userProgram;
+
+            const savedSection = localStorage.getItem('ojt_user_section');
+            if (savedSection) userSection = savedSection;
+            document.getElementById('user-section-input').value = userSection;
+
+            let savedLogs = localStorage.getItem('ojt_logs');
+            if (savedLogs) {
+                logs = JSON.parse(savedLogs);
+
+                // Normalization step (same as React App.tsx)
+                const seenDates = new Set();
+                logs = logs
+                    .filter(log => {
+                        if (seenDates.has(log.date)) return false;
+                        seenDates.add(log.date);
+                        return true;
+                    })
+                    .map(log => {
+                        const effectiveAmIn = log.isEarlyOut ? log.amIn : (log.amIn < '07:00' ? '07:00' : log.amIn);
+                        const am = calculateHours(effectiveAmIn, log.amOut);
+                        const pm = (log.isEarlyOut || !log.pmIn || !log.pmOut) ? 0 : calculateHours(log.pmIn, log.pmOut);
+                        let isOvertime = log.isOvertime || false;
+                        let dailyTotal = Math.min(8, am + pm);
+                        if (log.isEarlyOut) {
+                            dailyTotal = am;
+                            isOvertime = false;
+                        } else if (isOvertime && (am + pm) >= 9) {
+                            dailyTotal = am + pm;
+                        } else {
+                            isOvertime = false;
+                        }
+                        return {
+                            ...log,
+                            isOvertime,
+                            dailyTotal
+                        };
+                    });
+            }
+
+            // Set default form date to today
+            const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Manila' }); // YYYY-MM-DD in PHT
+            document.getElementById('log-date').value = todayStr;
+
+            // Set defaults only for fields that are NOT locked
+            const defaults = { 'am-in': '07:00', 'am-out': '12:00', 'pm-in': '13:00', 'pm-out': '16:00' };
+            LOCK_FIELDS.forEach(fieldId => {
+                if (!localStorage.getItem(getLockKey(fieldId))) {
+                    document.getElementById(fieldId).value = defaults[fieldId];
+                }
+            });
+
+            // Restore any locked fields from today
+            restoreLockedFields();
+
+            // Update expected logout display
+            computeExpectedLogout();
+
+            // Initial render
+            renderApp();
+
+            // Set up Scroll Spy & Intersection Observer for Animations
+            initInteractions();
+        }
+
+        // --- Interaction System (Scroll Spy & Observer) ---
+        function initInteractions() {
+            const sections = ['dashboard', 'log-session', 'history', 'analytics'];
+            const navLinks = document.querySelectorAll('.nav-link');
+            
+            // Intersection Observer for Animations
+            const observerOptions = { threshold: 0.15 };
+            const sectionObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const id = entry.target.id;
+                        if (id === 'dashboard') {
+                            document.getElementById('anim-header-title')?.classList.remove('opacity-0', 'translate-x-[-50px]');
+                            document.getElementById('anim-header-text')?.classList.remove('opacity-0');
+                            document.getElementById('anim-header-stats')?.classList.remove('opacity-0', 'scale-90');
+                            document.getElementById('anim-stats-grid')?.classList.remove('opacity-0', 'translate-y-[30px]');
+                            document.getElementById('anim-progress-bar')?.classList.remove('opacity-0');
+                        } else if (id === 'log-session') {
+                            document.getElementById('anim-input-form')?.classList.remove('opacity-0', 'translate-x-[-40px]');
+                        } else if (id === 'history') {
+                            document.getElementById('anim-history-table')?.classList.remove('opacity-0');
+                        } else if (id === 'analytics') {
+                            document.getElementById('anim-kpi-row')?.classList.remove('opacity-0', 'translate-y-[20px]');
+                            document.getElementById('anim-extended-kpis')?.classList.remove('opacity-0', 'translate-y-[20px]');
+                            document.getElementById('anim-charts-grid')?.classList.remove('opacity-0', 'translate-y-[40px]');
+                            document.getElementById('anim-monthly-summary')?.classList.remove('opacity-0', 'translate-y-[40px]');
+                            document.getElementById('anim-footer')?.classList.remove('opacity-0');
+                        }
+                    }
+                });
+            }, observerOptions);
+
+            sections.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) sectionObserver.observe(el);
+            });
+
+            // Scroll Spy for Nav highlighting
+            window.addEventListener('scroll', () => {
+                let current = '';
+                const scrollPos = window.pageYOffset || document.documentElement.scrollTop;
+                
+                sections.forEach(id => {
+                    const section = document.getElementById(id);
+                    if (section && scrollPos >= section.offsetTop - 300) {
+                        current = id;
+                    }
+                });
+
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('data-section') === current) {
+                        link.classList.add('active');
+                    }
+                });
+            });
+        }
+
+        // --- Event Listeners ---
+
+        // Profile Info Sync
+        document.getElementById('user-name-input').addEventListener('input', (e) => {
+            userName = e.target.value;
+            localStorage.setItem('ojt_user_name', userName);
+        });
+
+        document.getElementById('user-program-input').addEventListener('input', (e) => {
+            userProgram = e.target.value;
+            localStorage.setItem('ojt_user_program', userProgram);
+        });
+
+        document.getElementById('user-section-input').addEventListener('input', (e) => {
+            userSection = e.target.value;
+            localStorage.setItem('ojt_user_section', userSection);
+        });
+
+        // Early Out Checkbox
+        document.getElementById('early-out').addEventListener('change', (e) => {
+            const isEarlyOut = e.target.checked;
+            const pmInContainer = document.getElementById('pm-in-container');
+            const pmOutContainer = document.getElementById('pm-out-container');
+            const pmInInput = document.getElementById('pm-in');
+            const pmOutInput = document.getElementById('pm-out');
+
+            if (isEarlyOut) {
+                pmInContainer.classList.add('opacity-20', 'grayscale', 'pointer-events-none');
+                pmOutContainer.classList.add('opacity-20', 'grayscale', 'pointer-events-none');
+                pmInInput.required = false;
+                pmInInput.disabled = true;
+                pmOutInput.required = false;
+                pmOutInput.disabled = true;
+            } else {
+                pmInContainer.classList.remove('opacity-20', 'grayscale', 'pointer-events-none');
+                pmOutContainer.classList.remove('opacity-20', 'grayscale', 'pointer-events-none');
+                pmInInput.required = true;
+                pmInInput.disabled = false;
+                pmOutInput.required = true;
+                pmOutInput.disabled = false;
+            }
+        });
+
+        // Form Submit
+        document.getElementById('log-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            const date = document.getElementById('log-date').value;
+            const amIn = document.getElementById('am-in').value;
+            const amOut = document.getElementById('am-out').value;
+            const pmIn = document.getElementById('pm-in').value;
+            const pmOut = document.getElementById('pm-out').value;
+            const isEarlyOut = document.getElementById('early-out').checked;
+
+            if (logs.some(log => log.date === date)) {
+                showDialog('Duplicate Entry', 'A log for this date already exists. Edit it from the History section instead.');
+                return;
+            }
+
+            const effectiveAmIn = isEarlyOut ? amIn : (amIn < '07:00' ? '07:00' : amIn);
+            const am = calculateHours(effectiveAmIn, amOut);
+            const pm = isEarlyOut ? 0 : calculateHours(pmIn, pmOut);
+            
+            const todayStrTz = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Manila' });
+
+            if (!isEarlyOut && (am + pm) >= 9) {
+                if (date === todayStrTz && overtimeStatusObj.date === todayStrTz && overtimeStatusObj.confirmed !== null) {
+                    processLogSubmission(date, amIn, amOut, pmIn, pmOut, isEarlyOut, overtimeStatusObj.confirmed);
+                } else {
+                    showOvertimePromptDialog((didConfirm) => {
+                        if (date === todayStrTz) {
+                            window.confirmOvertime(didConfirm);
+                        }
+                        processLogSubmission(date, amIn, amOut, pmIn, pmOut, isEarlyOut, didConfirm);
+                    });
+                }
+            } else {
+                processLogSubmission(date, amIn, amOut, pmIn, pmOut, isEarlyOut, false);
+            }
+        });
+
+        function processLogSubmission(date, amIn, amOut, pmIn, pmOut, isEarlyOut, isOvertime) {
+            const effectiveAmIn = isEarlyOut ? amIn : (amIn < '07:00' ? '07:00' : amIn);
+            const am = calculateHours(effectiveAmIn, amOut);
+            const pm = isEarlyOut ? 0 : calculateHours(pmIn, pmOut);
+
+            let finalIsOvertime = isOvertime;
+            let dailyTotal = Math.min(8, am + pm);
+            if (isEarlyOut) {
+                dailyTotal = am;
+                finalIsOvertime = false;
+            } else if (finalIsOvertime && (am + pm) >= 9) {
+                dailyTotal = am + pm;
+            } else {
+                finalIsOvertime = false;
+            }
+
+            const newLog = {
+                id: crypto.randomUUID(),
+                date,
+                amIn,
+                amOut,
+                pmIn: isEarlyOut ? '' : pmIn,
+                pmOut: isEarlyOut ? '' : pmOut,
+                dailyTotal,
+                isEarlyOut,
+                isOvertime: finalIsOvertime
+            };
+
+            const otherLogs = logs.filter(log => log.date !== date);
+            logs = [newLog, ...otherLogs].sort((a, b) => b.date.localeCompare(a.date));
+
+            // Save & Render
+            localStorage.setItem('ojt_logs', JSON.stringify(logs));
+
+            // Reset Early Out for next entry
+            document.getElementById('early-out').checked = false;
+            // Trigger early out logic visually
+            document.getElementById('early-out').dispatchEvent(new Event('change'));
+
+            // AUTOMATIC RESET: Clear all locks and set to default for the next log
+            if (typeof unlockAllFields === 'function') unlockAllFields();
+            const defaults = { 'am-in': '07:00', 'am-out': '12:00', 'pm-in': '13:00', 'pm-out': '16:00' };
+            ['am-in', 'am-out', 'pm-in', 'pm-out'].forEach(fieldId => {
+                const el = document.getElementById(fieldId);
+                if (el) el.value = defaults[fieldId];
+            });
+            if (typeof computeExpectedLogout === 'function') computeExpectedLogout();
+
+            renderApp();
+
+            // Calculate break time for this session (actual elapsed)
+            let actualBreakMinutes = 0;
+            if (!isEarlyOut && pmIn && amOut) {
+                const [amH, amM] = amOut.split(':').map(Number);
+                const [pmH, pmM] = pmIn.split(':').map(Number);
+                actualBreakMinutes = (pmH * 60 + pmM) - (amH * 60 + amM);
+                actualBreakMinutes = Math.max(0, actualBreakMinutes);
+            }
+
+            // Calculate total accumulated work hours
+            const runningTotal = logs.reduce((acc, log) => acc + log.dailyTotal, 0);
+
+            // Format times for display
+            const format12H = (timeStr) => {
+                if (!timeStr) return '--:--';
+                const [h, m] = timeStr.split(':').map(Number);
+                return `${String(h % 12 || 12).padStart(2, '0')}:${String(m).padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'}`;
+            };
+
+            // Determine label classifications
+            let tags = [];
+            if (amIn <= '07:00') tags.push("On-Time/Early");
+            else tags.push("Late");
+            if (!isEarlyOut && pmOut >= '17:01') tags.push("Overtime");
+
+            // Additional Metrics calculations
+            const progressAdded = (dailyTotal / TARGET_HOURS) * 100;
+            const remainingHoursNow = Math.max(0, TARGET_HOURS - runningTotal);
+            let estWeeks = '0.0';
+            let estDays = 0;
+            if (window.ojtCompletionStats) {
+                estWeeks = window.ojtCompletionStats.weeks;
+                estDays = window.ojtCompletionStats.workingDays;
+            }
+
+            // Show Summary Dialog
+            showDialog('Session Logged', 
+                `Morning Login: ${format12H(amIn)}\n` +
+                `Afternoon Logout: ${isEarlyOut ? '--:--' : format12H(pmOut)}\n` +
+                `Classification: ${tags.join(' | ')}\n\n` +
+                `Break Time (Elapsed): ${actualBreakMinutes} mins\n` +
+                `Total Hours Served: ${dailyTotal.toFixed(2)} hrs\n` +
+                `Total Accumulated: ${runningTotal.toFixed(2)} hrs\n` +
+                `Progress Added: +${progressAdded.toFixed(2)}%\n` +
+                `Remaining Hours: ${remainingHoursNow.toFixed(2)} / 486.00 hrs\n` +
+                `Estimated Time Left: ${estWeeks} Weeks (${estDays} Days)`
+            );
+        }
+
+        // Delete Log
+        window.deleteLog = function (id) {
+            logs = logs.filter(log => log.id !== id);
+            localStorage.setItem('ojt_logs', JSON.stringify(logs));
+            renderApp();
+        }
+
+        // Toggle Overtime for a specific log entry
+        window.toggleOvertime = function (id) {
+            const logIndex = logs.findIndex(l => l.id === id);
+            if (logIndex === -1) return;
+
+            const log = logs[logIndex];
+
+            // Compute raw (uncapped) actual hours
+            const effectiveAmIn = log.isEarlyOut ? log.amIn : (log.amIn < '07:00' ? '07:00' : log.amIn);
+            const rawAm = calculateHours(effectiveAmIn, log.amOut);
+            const rawPm = log.isEarlyOut ? 0 : calculateHours(log.pmIn, log.pmOut);
+            const actualHours = rawAm + rawPm;
+
+            // Only allow overtime toggle when there are actually hours beyond 8
+            if (actualHours <= 8) return;
+
+            const newIsOvertime = !log.isOvertime;
+            const newDailyTotal = newIsOvertime ? actualHours : Math.min(8, actualHours);
+
+            logs[logIndex] = {
+                ...log,
+                isOvertime: newIsOvertime,
+                dailyTotal: newDailyTotal
+            };
+
+            localStorage.setItem('ojt_logs', JSON.stringify(logs));
+            renderApp();
+
+            // Show quick feedback toast
+            const toastMsg = newIsOvertime
+                ? `Overtime enabled for this session. Total: ${newDailyTotal.toFixed(2)}h`
+                : `Overtime removed. Daily total capped to ${newDailyTotal.toFixed(2)}h`;
+            showOvertimeFeedbackToast(newIsOvertime, toastMsg);
+        }
+
+        // Overtime Feedback Toast
+        function showOvertimeFeedbackToast(isOn, message) {
+            let toast = document.getElementById('ot-feedback-toast');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'ot-feedback-toast';
+                toast.className = 'fixed bottom-6 left-1/2 -translate-x-1/2 z-[200] px-6 py-3 rounded-2xl text-sm font-black tracking-wide shadow-2xl flex items-center gap-3 transition-all duration-500 opacity-0 translate-y-4 pointer-events-none';
+                document.body.appendChild(toast);
+            }
+
+            // Style based on on/off state
+            toast.className = toast.className.replace(/bg-\S+/g, '').replace(/text-\S+/g, 'text-stone-50');
+            if (isOn) {
+                toast.classList.add('bg-violet-600');
+            } else {
+                toast.classList.add('bg-stone-700');
+            }
+
+            const icon = isOn ? 'zap' : 'zap-off';
+            toast.innerHTML = `<i data-lucide="${icon}" class="w-4 h-4"></i><span>${message}</span>`;
+            lucide.createIcons();
+
+            // Animate in
+            requestAnimationFrame(() => {
+                toast.classList.remove('opacity-0', 'translate-y-4');
+                toast.classList.add('opacity-100', 'translate-y-0');
+            });
+
+            // Animate out after 3s
+            clearTimeout(toast._hideTimer);
+            toast._hideTimer = setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-4');
+                toast.classList.remove('opacity-100', 'translate-y-0');
+            }, 3000);
+        }
+
+        // Edit Log Handlers
+        window.openEditDialog = function (id) {
+            const log = logs.find(l => l.id === id);
+            if (!log || log.hasBeenEdited) return;
+
+            document.getElementById('edit-log-id').value = log.id;
+            document.getElementById('edit-am-in').value = log.amIn;
+            document.getElementById('edit-am-out').value = log.amOut;
+            document.getElementById('edit-pm-in').value = log.pmIn || '';
+            document.getElementById('edit-pm-out').value = log.pmOut || '';
+
+            const dialog = document.getElementById('edit-dialog');
+            const content = document.getElementById('edit-dialog-content');
+            dialog.classList.remove('opacity-0', 'pointer-events-none');
+            content.classList.remove('scale-95');
+            content.classList.add('scale-100');
+            lucide.createIcons();
+        }
+
+        window.closeEditDialog = function () {
+            const dialog = document.getElementById('edit-dialog');
+            const content = document.getElementById('edit-dialog-content');
+            dialog.classList.add('opacity-0', 'pointer-events-none');
+            content.classList.remove('scale-100');
+            content.classList.add('scale-95');
+        }
+
+        document.getElementById('edit-log-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const id = document.getElementById('edit-log-id').value;
+            const logIndex = logs.findIndex(l => l.id === id);
+            if (logIndex === -1) return;
+
+            const existingLog = logs[logIndex];
+            const amIn = document.getElementById('edit-am-in').value;
+            const amOut = document.getElementById('edit-am-out').value;
+            const pmIn = document.getElementById('edit-pm-in').value;
+            const pmOut = document.getElementById('edit-pm-out').value;
+
+            const isEarlyOut = !pmIn || !pmOut;
+
+            const effectiveAmIn = isEarlyOut ? amIn : (amIn < '07:00' ? '07:00' : amIn);
+            const am = calculateHours(effectiveAmIn, amOut);
+            const pm = isEarlyOut ? 0 : calculateHours(pmIn, pmOut);
+
+            if (!isEarlyOut && (am + pm) >= 9) {
+                showOvertimePromptDialog((didConfirm) => {
+                    processEditSubmission(logIndex, existingLog, amIn, amOut, pmIn, pmOut, isEarlyOut, didConfirm);
+                });
+            } else {
+                processEditSubmission(logIndex, existingLog, amIn, amOut, pmIn, pmOut, isEarlyOut, false);
+            }
+        });
+
+        function processEditSubmission(logIndex, existingLog, amIn, amOut, pmIn, pmOut, isEarlyOut, isOvertime) {
+            const effectiveAmIn = isEarlyOut ? amIn : (amIn < '07:00' ? '07:00' : amIn);
+            const am = calculateHours(effectiveAmIn, amOut);
+            const pm = isEarlyOut ? 0 : calculateHours(pmIn, pmOut);
+
+            let finalIsOvertime = isOvertime;
+            let dailyTotal = Math.min(8, am + pm);
+            if (isEarlyOut) {
+                dailyTotal = am;
+                finalIsOvertime = false;
+            } else if (finalIsOvertime && (am + pm) >= 9) {
+                dailyTotal = am + pm;
+            } else {
+                finalIsOvertime = false;
+            }
+
+            logs[logIndex] = {
+                ...existingLog,
+                amIn,
+                amOut,
+                pmIn: isEarlyOut ? '' : pmIn,
+                pmOut: isEarlyOut ? '' : pmOut,
+                dailyTotal,
+                isEarlyOut,
+                isOvertime: finalIsOvertime,
+                hasBeenEdited: true
+            };
+
+            localStorage.setItem('ojt_logs', JSON.stringify(logs));
+            closeEditDialog();
+            renderApp();
+        }
+
+        // --- Calendar Viewport ---
+        let calendarYear = new Date().getFullYear();
+        let calendarMonth = new Date().getMonth();
+
+        const MONTH_NAMES = [
+            'January','February','March','April','May','June',
+            'July','August','September','October','November','December'
+        ];
+
+        window.shiftCalendar = function (delta) {
+            calendarMonth += delta;
+            if (calendarMonth > 11) { calendarMonth = 0; calendarYear++; }
+            if (calendarMonth < 0)  { calendarMonth = 11; calendarYear--; }
+            renderCalendar();
+            lucide.createIcons();
+        };
+
+        function renderCalendar() {
+            const grid  = document.getElementById('cal-grid');
+            const label = document.getElementById('cal-month-label');
+            if (!grid || !label) return;
+
+            label.textContent = `${MONTH_NAMES[calendarMonth]} ${calendarYear}`;
+
+            // Build date → status lookup from logs
+            const statusMap = {};
+            logs.forEach(log => {
+                if (!log.amIn) return;
+                
+                if (log.isOvertime) {
+                    statusMap[log.date] = 'overtime';
+                } else {
+                    statusMap[log.date] = log.amIn <= '07:00' ? 'present' : 'late';
+                }
+            });
+
+            // --- Live punch-in: reflect today's AM In before session is saved ---
+            const todayPH = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Manila' });
+            const liveAmIn = document.getElementById('am-in')?.value;
+            const liveDateInput = document.getElementById('log-date')?.value;
+            // Use the date field value if set, otherwise default to today
+            const liveDate = liveDateInput || todayPH;
+            if (liveAmIn && !statusMap[liveDate]) {
+                // Don't overwrite an already-saved log for the same date
+                statusMap[liveDate] = liveAmIn <= '07:00' ? 'present' : 'late';
+            }
+
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            const firstDow   = new Date(calendarYear, calendarMonth, 1).getDay(); // 0=Sun
+            const daysInMonth = new Date(calendarYear, calendarMonth + 1, 0).getDate();
+
+            grid.innerHTML = '';
+
+            // Leading empty cells
+            for (let i = 0; i < firstDow; i++) {
+                grid.appendChild(document.createElement('div'));
+            }
+
+            for (let d = 1; d <= daysInMonth; d++) {
+                const mm      = String(calendarMonth + 1).padStart(2, '0');
+                const dd      = String(d).padStart(2, '0');
+                const dateStr = `${calendarYear}-${mm}-${dd}`;
+                const dateObj = new Date(calendarYear, calendarMonth, d);
+                const dow     = dateObj.getDay();
+
+                const isWeekend = dow === 0 || dow === 6;
+                const isHoliday = dateStr in HOLIDAYS_2026;
+                const isPast    = dateObj < today;
+                const isToday   = dateObj.getTime() === today.getTime();
+                const status    = statusMap[dateStr];
+
+                const cell = document.createElement('div');
+                cell.setAttribute('role', 'gridcell');
+
+                // Determine colour class
+                let cls = 'flex items-center justify-center rounded-xl text-[11px] font-black aspect-square transition-all cursor-default select-none ';
+
+                if (status === 'overtime') {
+                    cls += 'bg-purple-500/20 border border-purple-500/40 text-purple-300 shadow-[0_0_15px_rgba(168,85,247,0.15)]';
+                    cell.title = `${dateStr} — Overtime`;
+                } else if (status === 'present') {
+                    cls += 'bg-emerald-500/20 border border-emerald-500/40 text-emerald-300';
+                    cell.title = `${dateStr} — On-Time/Early`;
+                } else if (status === 'late') {
+                    cls += 'bg-orange-500/20 border border-orange-500/40 text-orange-300';
+                    cell.title = `${dateStr} — Late`;
+                } else if (!isWeekend && !isHoliday && isPast) {
+                    // Past weekday with no log → Absent
+                    cls += 'bg-stone-500/10 border border-stone-500/20 text-stone-400/80';
+                    cell.title = `${dateStr} — Absent`;
+                } else if (isHoliday) {
+                    cls += 'bg-red-500/10 border border-red-500/20 text-red-500/70';
+                    cell.title = `${dateStr} — ${HOLIDAYS_2026[dateStr]}`;
+                } else if (isWeekend) {
+                    cls += 'bg-white/3 text-stone-700';
+                    cell.title = `${dateStr} — Weekend`;
+                } else {
+                    // Future or today (no log yet)
+                    cls += 'bg-white/3 text-stone-600';
+                    cell.title = dateStr;
+                }
+
+                // Today ring (cyan outline)
+                if (isToday) {
+                    cls += ' ring-2 ring-cyan-500/60';
+                }
+
+                cls += ' cursor-pointer hover:scale-110 active:scale-95 z-10 hover:z-20';
+                cell.className = cls;
+                cell.textContent = d;
+                cell.onclick = () => showCalendarSessionDetails(dateStr);
+                grid.appendChild(cell);
+            }
+        }
+
+        // --- Chart Logic ---
+        let performanceChartInstance = null;
+        let monthlyChartInstance = null;
+        let monthlyTimelineData = [];
+
+        function renderCharts() {
+            // 1. Performance Donut Chart
+            const present = parseInt(document.getElementById('perf-present')?.textContent || '0');
+            const late = parseInt(document.getElementById('perf-late')?.textContent || '0');
+            const absent = parseInt(document.getElementById('perf-absent')?.textContent || '0');
+
+            const ctxDonut = document.getElementById('performanceDonutChart');
+            if (ctxDonut) {
+                if (performanceChartInstance) performanceChartInstance.destroy();
+                
+                Chart.defaults.color = '#a8a29e'; // text-stone-400
+                Chart.defaults.font.family = "'Inter', sans-serif";
+                Chart.defaults.font.weight = '600';
+                
+                const donutData = [present, late, absent];
+                // Only render if there's actual data to avoid an empty circle
+                const hasData = donutData.some(val => val > 0);
+                
+                performanceChartInstance = new Chart(ctxDonut, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['On-Time/Early', 'Late', 'Absent'],
+                        datasets: [{
+                            data: hasData ? donutData : [1],
+                            backgroundColor: hasData ? [
+                                '#10b981', // emerald-500
+                                '#f97316', // orange-500
+                                '#a8a29e'  // stone-400 (Silver Grey)
+                            ] : ['#292524'], // stone-800 placeholder
+                            borderWidth: 0,
+                            hoverOffset: hasData ? 6 : 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '60%', // Thicker donut
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    padding: 25,
+                                    usePointStyle: true,
+                                    pointStyle: 'circle',
+                                    boxWidth: 8,
+                                    boxHeight: 8,
+                                    font: {
+                                        size: 13,
+                                        weight: '600'
+                                    }
+                                }
+                            },
+                            tooltip: {
+                                enabled: hasData
+                            }
+                        }
+                    }
+                });
+            }
+
+            // 2. Monthly Hours Bar Chart
+            const ctxBar = document.getElementById('monthlyBarChart');
+            if (ctxBar && monthlyTimelineData.length > 0) {
+                if (monthlyChartInstance) monthlyChartInstance.destroy();
+
+                const labels = monthlyTimelineData.map(d => d.month.split(' ')[0].substring(0, 3)); // "Jan", "Feb"
+                const dataPoints = monthlyTimelineData.map(d => d.total);
+
+                monthlyChartInstance = new Chart(ctxBar, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Hours Logged',
+                            data: dataPoints,
+                            backgroundColor: '#22d3ee', // cyan-400
+                            hoverBackgroundColor: '#06b6d4', // cyan-500
+                            borderRadius: 100, // Fully rounded pill shape
+                            borderSkipped: false, // Round bottom too
+                            barThickness: 20 // Slightly thicker bars
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        layout: {
+                            padding: {
+                                top: 20
+                            }
+                        },
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: { label: (ctx) => `${ctx.raw.toFixed(2)} hrs` }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: { 
+                                    color: 'rgba(255,255,255,0.03)',
+                                    drawBorder: false,
+                                },
+                                border: { display: false },
+                                ticks: {
+                                    font: { size: 12, weight: '500' },
+                                    color: '#78716c', // stone-500
+                                    padding: 10
+                                }
+                            },
+                            x: {
+                                grid: { display: false },
+                                border: { display: false },
+                                ticks: {
+                                    font: { size: 13, weight: '600' },
+                                    color: '#a8a29e', // stone-400
+                                    padding: 10
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        // --- Performance Calculator ---
+        function calculatePerformance() {
+            let present = 0;
+            let late = 0;
+
+            logs.forEach(log => {
+                if (!log.amIn) return;
+                // Present: AM In at or before 07:00 (6:00–7:00 window)
+                if (log.amIn <= '07:00') {
+                    present++;
+                } else {
+                    // Late: AM In after 07:00 (7:01 and above)
+                    late++;
+                }
+            });
+
+            // Absent: weekdays from START_DATE up to yesterday with no log
+            const logDates = new Set(logs.map(l => l.date));
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const yesterday = new Date(today);
+            yesterday.setDate(yesterday.getDate() - 1);
+
+            let absent = 0;
+            const cur = new Date(START_DATE);
+            cur.setHours(0, 0, 0, 0);
+
+            while (cur <= yesterday) {
+                const dow = cur.getDay();
+                const dateStr = cur.toISOString().split('T')[0];
+                const isWeekend = dow === 0 || dow === 6;
+                const isHoliday = dateStr in HOLIDAYS_2026;
+                if (!isWeekend && !isHoliday && !logDates.has(dateStr)) {
+                    absent++;
+                }
+                cur.setDate(cur.getDate() + 1);
+            }
+
+            const elP = document.getElementById('perf-present');
+            const elL = document.getElementById('perf-late');
+            const elA = document.getElementById('perf-absent');
+            if (elP) elP.textContent = present;
+            if (elL) elL.textContent = late;
+            if (elA) elA.textContent = absent;
+
+            // Updated logic for Late and Absent average KPIs (per month)
+            const monthsWithLogs = new Set(logs.map(l => {
+                const d = new Date(l.date);
+                return `${d.getFullYear()}-${d.getMonth()}`;
+            })).size || 1;
+            
+            const elAvgLate = document.getElementById('kpi-avg-late');
+            const elAvgAbsent = document.getElementById('kpi-avg-absent');
+            if (elAvgLate) elAvgLate.textContent = (late / monthsWithLogs).toFixed(1);
+            if (elAvgAbsent) elAvgAbsent.textContent = (absent / monthsWithLogs).toFixed(1);
+        }
+
+        // Render Application
+        function renderApp() {
+            // 1. Core Derived Data
+            const allLogsTotal = logs.reduce((acc, log) => acc + log.dailyTotal, 0);
+
+            let totalHoursServed = 0;
+            let remainingHours = TARGET_HOURS;
+            let progressPercentage = 0;
+
+            // Calculate core app stats if history exists
+            if (logs.length > 0) {
+                totalHoursServed = allLogsTotal;
+                remainingHours = Math.max(0, TARGET_HOURS - totalHoursServed);
+                progressPercentage = (totalHoursServed / TARGET_HOURS) * 100;
+            }
+
+            // 2. Compute Completion Stats
+            const latestLogDateStr = logs.length > 0 ? logs[0].date : new Date().toLocaleDateString('en-CA');
+            const lastLogDate = new Date(latestLogDateStr);
+            let calculationStartDate = new Date(Math.max(lastLogDate.getTime() + 86400000, START_DATE.getTime()));
+
+            let completionStats = { date: 'Completed!', workingDays: 0, weeks: 0, weeklyBreakdown: [] };
+
+            if (remainingHours > 0) {
+                let current = new Date(calculationStartDate);
+                let hoursLeft = remainingHours;
+                let workingDays = 0;
+                let cumulativeHours = totalHoursServed;
+                let iterations = 0;
+                const weeklyBreakdown = [];
+
+                while (hoursLeft > 0 && iterations < 1000) {
+                    iterations++;
+                    const weekStart = new Date(current);
+
+                    let weekWorkDays = 0;
+                    let weekHours = 0;
+
+                    for (let i = 0; i < 7; i++) {
+                        if (hoursLeft <= 0) break;
+                        const dayDate = new Date(weekStart);
+                        dayDate.setDate(dayDate.getDate() + i);
+
+                        const dayOfWeek = dayDate.getDay();
+                        const dateStr = dayDate.toISOString().split('T')[0];
+                        const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+                        const isHoliday = dateStr in HOLIDAYS_2026;
+
+                        if (!isWeekend && !isHoliday) {
+                            const hoursThisDay = Math.min(DAILY_QUOTA, hoursLeft);
+                            hoursLeft -= hoursThisDay;
+                            workingDays++;
+                            weekWorkDays++;
+                            weekHours += hoursThisDay;
+                            cumulativeHours += hoursThisDay;
+                        }
+                        current = new Date(dayDate);
+                    }
+
+                    weeklyBreakdown.push({
+                        week: `Wk ${weeklyBreakdown.length + 1}`,
+                        start: weekStart,
+                        end: current,
+                        workDays: weekWorkDays,
+                        hours: weekHours,
+                        cumulative: cumulativeHours
+                    });
+                    current.setDate(current.getDate() + 1);
+                }
+
+                completionStats = {
+                    date: current.toLocaleDateString('en-PH', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }),
+                    workingDays,
+                    weeks: (workingDays / 5).toFixed(1),
+                    weeklyBreakdown
+                };
+            }
+            window.ojtCompletionStats = completionStats;
+
+            // 3. Update DOM Elements
+            const elHours = document.getElementById('total-hours-served');
+            const elRemaining = document.getElementById('remaining-hours');
+            const elPct = document.getElementById('progress-percentage');
+            const elFinish = document.getElementById('estimated-finish-date');
+            const elWeeks = document.getElementById('estimated-weeks');
+            if (elHours) elHours.innerText = totalHoursServed.toFixed(2);
+            if (elRemaining) elRemaining.innerText = remainingHours.toFixed(2);
+            if (elPct) elPct.innerText = `Progress: ${progressPercentage.toFixed(1)}%`;
+            if (elFinish) elFinish.innerText = completionStats.date;
+            if (elWeeks) elWeeks.innerText = completionStats.weeks;
+            if (window.updateProgressBar) updateProgressBar(totalHoursServed);
+
+            // 4. Render History Table
+            const tbody = document.getElementById('history-table-body');
+            tbody.innerHTML = '';
+
+            if (logs.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="p-24 text-center">
+                            <div class="flex flex-col items-center gap-6 opacity-10">
+                                <i data-lucide="history" class="w-16 h-16"></i>
+                                <p class="text-sm font-black uppercase tracking-[0.5em]">No sessions logged yet</p>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            } else {
+                let lastRenderedMonth = null;
+                logs.forEach((log, index) => {
+                    const dateObj = new Date(log.date);
+                    const currentMonth = dateObj.toLocaleDateString('en-PH', { month: 'long', year: 'numeric' });
+
+                    if (currentMonth !== lastRenderedMonth) {
+                        const dividerTr = document.createElement('tr');
+                        dividerTr.className = "bg-black/20";
+                        dividerTr.innerHTML = `
+                            <td colspan="6" class="py-4 px-8 border-y border-white/5">
+                                <span class="text-[10px] font-black uppercase tracking-[0.4em] text-cyan-400/80">${currentMonth}</span>
+                            </td>
+                        `;
+                        tbody.appendChild(dividerTr);
+                        lastRenderedMonth = currentMonth;
+                    }
+
+                    const logsBefore = logs.slice(index + 1);
+                    const historyTotalBefore = logsBefore.reduce((acc, l) => acc + l.dailyTotal, 0);
+                    const runningGrandTotal = historyTotalBefore + log.dailyTotal;
+                    const runningRemaining = TARGET_HOURS - runningGrandTotal;
+
+                    // Compute raw (uncapped) actual hours — display only, never saved
+                    const rawAm = calculateHours(log.amIn, log.amOut);
+                    const rawPm = log.isEarlyOut ? 0 : calculateHours(log.pmIn, log.pmOut);
+                    const actualHours = rawAm + rawPm;
+                    const revealRowId = `actual-reveal-${log.id}`;
+
+                    const tr = document.createElement('tr');
+                    tr.className = "hover:bg-white/5 transition-colors group";
+                    tr.innerHTML = `
+                        <td class="py-4 px-8">
+                            <div class="flex flex-col">
+                                <span class="text-base font-black text-stone-50">
+                                    ${dateObj.toLocaleDateString('en-PH', { month: 'short', day: 'numeric' })}
+                                </span>
+                                <span class="text-[10px] font-bold text-stone-600 uppercase tracking-widest">
+                                    ${dateObj.toLocaleDateString('en-PH', { weekday: 'long' })}
+                                </span>
+                            </div>
+                        </td>
+                        <td class="py-4 px-8">
+                            <div class="flex items-center gap-3 text-sm font-bold text-stone-400">
+                                <i data-lucide="sun" class="text-amber-400/50 w-3.5 h-3.5"></i>
+                                ${log.amIn} – ${log.amOut}
+                            </div>
+                        </td>
+                        <td class="py-4 px-8">
+                            ${log.isEarlyOut ?
+                            `<span class="text-[10px] font-black text-stone-800 uppercase tracking-[0.2em] italic">Early Out</span>` :
+                            `<div class="flex items-center gap-3 text-sm font-bold text-stone-400">
+                                <i data-lucide="moon" class="text-cyan-400/50 w-3.5 h-3.5"></i>
+                                ${log.pmIn} – ${log.pmOut}
+                            </div>`
+                        }
+                        ${log.isOvertime ? `<div class="mt-2 flex"><span class="px-2 py-0.5 bg-amber-500/10 text-amber-400 text-[10px] font-black uppercase tracking-widest rounded-md border border-amber-500/20 shadow-md">Overtime</span></div>` : ''}
+                        </td>
+                        <td class="py-4 px-8 text-right">
+                            <span class="text-base font-black text-amber-400">
+                                ${log.dailyTotal.toFixed(2)}h
+                            </span>
+                        </td>
+                        <td class="py-4 px-8 text-right">
+                            <div class="flex flex-col items-end">
+                                <span class="text-base font-black text-cyan-300">${runningGrandTotal.toFixed(2)}h</span>
+                                <span class="text-[10px] font-bold text-stone-600 uppercase tracking-widest">${((runningGrandTotal / TARGET_HOURS) * 100).toFixed(1)}%</span>
+                            </div>
+                        </td>
+                        <td class="py-4 px-8">
+                            <div class="flex items-center justify-center gap-3">
+                                <button 
+                                    onclick="toggleActualHours('${revealRowId}')"
+                                    class="p-3.5 hover:bg-violet-500/10 text-stone-600 hover:text-violet-400 rounded-2xl transition-all"
+                                    title="Reveal actual hours (display only)"
+                                >
+                                    <i data-lucide="eye" class="w-[22px] h-[22px]"></i>
+                                </button>
+                                ${actualHours > 8 ? `
+                                <button 
+                                    onclick="toggleOvertime('${log.id}')"
+                                    class="p-3.5 rounded-2xl transition-all ${log.isOvertime ? 'bg-violet-500/15 text-violet-300 hover:bg-violet-500/25 ring-1 ring-violet-500/40' : 'hover:bg-violet-500/10 text-stone-600 hover:text-violet-400'}"
+                                    title="${log.isOvertime ? 'Overtime ON — Click to remove overtime (cap to 8h)' : 'Click to count overtime hours (remove 8h cap)'}"
+                                >
+                                    <i data-lucide="zap" class="w-[22px] h-[22px]"></i>
+                                </button>
+                                ` : `
+                                <div class="p-3.5 text-stone-800/30" title="No overtime possible (total ≤ 8h)">
+                                    <i data-lucide="zap" class="w-[22px] h-[22px]"></i>
+                                </div>
+                                `}
+                                ${!log.hasBeenEdited ? `
+                                <button 
+                                    onclick="openEditDialog('${log.id}')"
+                                    class="p-3.5 hover:bg-emerald-500/10 text-stone-600 hover:text-emerald-400 rounded-2xl transition-all"
+                                    title="Edit log (1 time only)"
+                                >
+                                    <i data-lucide="edit-3" class="w-[22px] h-[22px]"></i>
+                                </button>
+                                ` : `
+                                <div class="p-3.5 text-stone-800" title="Already Edited Once">
+                                    <i data-lucide="check" class="w-[22px] h-[22px]"></i>
+                                </div>
+                                `}
+                                <button 
+                                    onclick="deleteLog('${log.id}')"
+                                    class="p-3.5 hover:bg-red-500/10 text-stone-600 hover:text-red-400 rounded-2xl transition-all"
+                                    title="Delete log"
+                                >
+                                    <i data-lucide="trash-2" class="w-[22px] h-[22px]"></i>
+                                </button>
+                            </div>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+
+                    // Reveal Sub-Row (display only — does NOT affect any totals)
+                    const revealTr = document.createElement('tr');
+                    revealTr.id = revealRowId;
+                    revealTr.className = 'hidden bg-violet-500/5 border-t border-violet-500/10';
+                    revealTr.innerHTML = `
+                        <td colspan="6" class="px-10 py-4">
+                            <div class="flex items-center gap-3">
+                                <i data-lucide="eye" class="w-4 h-4 text-violet-400/60"></i>
+                                <span class="text-[11px] font-black uppercase tracking-[0.3em] text-violet-400/60">Actual Hours (Display Only)</span>
+                                <span class="text-base font-black text-violet-300 ml-2">${actualHours.toFixed(2)}h</span>
+                                <span class="text-[10px] text-stone-600 ml-1 italic">— not counted toward progress or DTR</span>
+                            </div>
+                        </td>
+                    `;
+                    tbody.appendChild(revealTr);
+                });
+            }
+
+            // 5. Render Monthly Timeline
+            calculateAndRenderMonthlyTimeline(completionStats);
+
+            // 6. Update Performance Stats + Calendar + Charts
+            calculatePerformance();
+            renderCalendar();
+
+            // 7. Calculate and Update KPI Panels
+            const elAvgDay = document.getElementById('kpi-avg-day');
+            const elAvgMonth = document.getElementById('kpi-avg-month');
+
+            let avgPerDay = 0;
+            let avgPerMonth = 0;
+
+            let totalLoginMins = 0;
+            let totalLogoutMins = 0;
+            let totalOvertimeHours = 0;
+            let loginCount = 0;
+            let logoutCount = 0;
+
+            if (logs.length > 0) {
+                // Avg per day
+                const daysWithLogs = logs.length;
+                avgPerDay = totalHoursServed / daysWithLogs;
+
+                // Avg per month
+                const monthsWithLogs = new Set(logs.map(log => {
+                    const d = new Date(log.date);
+                    return `${d.getFullYear()}-${d.getMonth()}`;
+                })).size;
+                avgPerMonth = monthsWithLogs > 0 ? totalHoursServed / monthsWithLogs : 0;
+                
+                // Extended Averages
+                logs.forEach(log => {
+                    if (log.amIn) {
+                        const [h, m] = log.amIn.split(':').map(Number);
+                        totalLoginMins += (h * 60 + m);
+                        loginCount++;
+                    }
+                    if (log.pmOut && !log.isEarlyOut) {
+                        const [h, m] = log.pmOut.split(':').map(Number);
+                        totalLogoutMins += (h * 60 + m);
+                        logoutCount++;
+                    } else if (log.amOut) {
+                        const [h, m] = log.amOut.split(':').map(Number);
+                        totalLogoutMins += (h * 60 + m);
+                        logoutCount++;
+                    }
+                    if (log.isOvertime) {
+                        if (log.dailyTotal > 8) {
+                            totalOvertimeHours += (log.dailyTotal - 8);
+                        }
+                    }
+                });
+                
+                const avgLogin = loginCount ? totalLoginMins / loginCount : 0;
+                const avgLogout = logoutCount ? totalLogoutMins / logoutCount : 0;
+                
+                const formatTime = (totalMins) => {
+                    if (!totalMins) return '--:--';
+                    const h = Math.floor(totalMins / 60) % 24;
+                    const m = Math.floor(totalMins % 60);
+                    const ampm = h >= 12 ? 'PM' : 'AM';
+                    const h12 = h % 12 || 12;
+                    return `${String(h12).padStart(2,'0')}:${String(m).padStart(2,'0')} ${ampm}`;
+                };
+                
+                const mths = monthsWithLogs || 1;
+                const elLogin = document.getElementById('kpi-avg-login');
+                const elLogout = document.getElementById('kpi-avg-logout');
+                const elOT = document.getElementById('kpi-avg-overtime');
+                if (elLogin) elLogin.textContent = formatTime(avgLogin);
+                if (elLogout) elLogout.textContent = formatTime(avgLogout);
+                if (elOT) elOT.textContent = (totalOvertimeHours / mths).toFixed(2);
+            }
+
+            if (elAvgDay) elAvgDay.textContent = avgPerDay.toFixed(2);
+            if (elAvgMonth) elAvgMonth.textContent = avgPerMonth.toFixed(2);
+            
+            // Populate Previous Statistics Block
+            const prevStatsContainer = document.getElementById('prev-stats-container');
+            if (prevStatsContainer) {
+                if (logs.length > 0) {
+                    prevStatsContainer.classList.remove('hidden');
+                    // Add slight delay for animation effect
+                    setTimeout(() => {
+                        prevStatsContainer.classList.remove('opacity-0', 'translate-y-[10px]');
+                    }, 100);
+                    
+                    const lastLog = logs[0]; // most recent log
+                    
+                    const format12HLocal = (timeStr) => {
+                        if (!timeStr) return '--:--';
+                        const [h, m] = timeStr.split(':').map(Number);
+                        const ampm = h >= 12 ? 'PM' : 'AM';
+                        const h12 = h % 12 || 12;
+                        return `${String(h12).padStart(2,'0')}:${String(m).padStart(2,'0')} ${ampm}`;
+                    };
+
+                    document.getElementById('prev-stat-range').innerHTML = `${format12HLocal(lastLog.amIn)} &ndash; ${lastLog.isEarlyOut ? 'Early Out' : format12HLocal(lastLog.pmOut)}`;
+                    const d = new Date(lastLog.date);
+                    document.getElementById('prev-stat-date').textContent = d.toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' });
+
+                    let actualBreakMinutes = 0;
+                    if (!lastLog.isEarlyOut && lastLog.pmIn && lastLog.amOut) {
+                        const [amH, amM] = lastLog.amOut.split(':').map(Number);
+                        const [pmH, pmM] = lastLog.pmIn.split(':').map(Number);
+                        actualBreakMinutes = (pmH * 60 + pmM) - (amH * 60 + amM);
+                        actualBreakMinutes = Math.max(0, actualBreakMinutes);
+                    }
+                    document.getElementById('prev-stat-break').textContent = lastLog.isEarlyOut ? '--' : actualBreakMinutes;
+                    document.getElementById('prev-stat-session-hrs').textContent = lastLog.dailyTotal.toFixed(2);
+
+                    document.getElementById('prev-stat-accumulated').textContent = totalHoursServed.toFixed(2);
+                    document.getElementById('prev-stat-progress-pct').textContent = `${((totalHoursServed / TARGET_HOURS) * 100).toFixed(2)}%`;
+                } else {
+                    prevStatsContainer.classList.add('hidden', 'opacity-0', 'translate-y-[10px]');
+                }
+            }
+            
+            // Allow DOM to update its specific performance elements, then render charts
+            setTimeout(renderCharts, 50);
+
+            // Re-render icons for dynamic content
+            lucide.createIcons();
+        }
+
+        // Calculate and Render Monthly Timeline
+        window.toggleMonthExpander = function (monthKey) {
+            expandedMonth = expandedMonth === monthKey ? null : monthKey;
+            renderApp();
+        }
+
+        function calculateAndRenderMonthlyTimeline(completionStats) {
+            const timeline = [];
+            const now = new Date();
+
+            const logsByMonth = {};
+            logs.forEach(log => {
+                const d = new Date(log.date);
+                const key = d.toLocaleDateString('en-PH', { month: 'long', year: 'numeric' });
+                if (!logsByMonth[key]) logsByMonth[key] = { total: 0, daily: [] };
+                logsByMonth[key].total += log.dailyTotal;
+                logsByMonth[key].daily.push({
+                    date: log.date,
+                    hours: log.dailyTotal,
+                    isActual: true
+                });
+            });
+
+            Object.values(logsByMonth).forEach(m => {
+                m.daily.sort((a, b) => a.date.localeCompare(b.date));
+            });
+
+            let current = new Date(START_DATE.getFullYear(), START_DATE.getMonth(), 1);
+            const endMonthDate = completionStats.date === 'Completed!' ? now : new Date(completionStats.date);
+            const endMonth = new Date(endMonthDate.getFullYear(), endMonthDate.getMonth(), 1);
+
+            while (current <= endMonth) {
+                const monthKey = current.toLocaleDateString('en-PH', { month: 'long', year: 'numeric' });
+                const isCurrentMonth = current.getMonth() === now.getMonth() && current.getFullYear() === now.getFullYear();
+                const isPastMonth = current < new Date(now.getFullYear(), now.getMonth(), 1);
+
+                let monthData = logsByMonth[monthKey] || { total: 0, daily: [] };
+                let total = monthData.total;
+                let dailyLogs = [...monthData.daily];
+
+                completionStats.weeklyBreakdown.forEach((w) => {
+                    const wMonth = w.start.toLocaleDateString('en-PH', { month: 'long', year: 'numeric' });
+                    if (wMonth === monthKey && !isCurrentMonth && !isPastMonth) {
+                        total += w.hours;
+                        dailyLogs.push({
+                            date: `${w.start.toLocaleDateString('en-PH', { month: 'short', day: 'numeric' })} - ${w.end.toLocaleDateString('en-PH', { month: 'short', day: 'numeric' })}`,
+                            hours: w.hours,
+                            isActual: false
+                        });
+                    }
+                });
+
+                timeline.push({
+                    month: monthKey,
+                    total,
+                    status: isCurrentMonth ? 'Current' : (isPastMonth ? 'Finished' : 'Projected'),
+                    isCurrent: isCurrentMonth,
+                    dailyLogs
+                });
+
+                current.setMonth(current.getMonth() + 1);
+            }
+
+            monthlyTimelineData = timeline; // Save for the Bar Chart
+
+            const mTbody = document.getElementById('monthly-timeline-body');
+            mTbody.innerHTML = '';
+
+            timeline.forEach(item => {
+                // Main Row
+                const tr = document.createElement('tr');
+                tr.onclick = () => toggleMonthExpander(item.month);
+                tr.className = `hover:bg-white/5 transition-colors group cursor-pointer ${item.isCurrent ? 'bg-cyan-500/5' : ''}`;
+                tr.innerHTML = `
+                    <td class="py-4 px-8">
+                        <div class="flex items-center gap-4">
+                            <span class="text-xs font-black px-5 py-2 rounded-full ${item.isCurrent ? 'bg-cyan-500 text-stone-950' : 'bg-white/5 text-stone-400'}">
+                                ${item.month}
+                            </span>
+                            ${item.dailyLogs.length > 0 ? `<i data-lucide="chevron-right" class="w-[18px] h-[18px] text-white/20 transition-transform ${expandedMonth === item.month ? 'rotate-90' : ''}"></i>` : ''}
+                        </div>
+                    </td>
+                    <td class="py-4 px-8 text-base font-black text-right ${item.status === 'Projected' ? 'text-stone-700' : 'text-amber-400'}">
+                        ${item.total.toFixed(2)} hrs
+                    </td>
+                    <td class="py-4 px-8 text-center">
+                        <span class="text-[10px] font-black uppercase tracking-[0.3em] ${item.status === 'Current' ? 'text-cyan-400' : item.status === 'Finished' ? 'text-emerald-400' : 'text-stone-700'}">
+                            ${item.status}
+                        </span>
+                    </td>
+                `;
+                mTbody.appendChild(tr);
+
+                // Expanded Row
+                if (expandedMonth === item.month && item.dailyLogs.length > 0) {
+                    const expandTr = document.createElement('tr');
+                    expandTr.className = "bg-black/40";
+
+                    let dailyBreakdownHTML = '';
+                    item.dailyLogs.forEach((log, idx) => {
+                        dailyBreakdownHTML += `
+                            <div class="flex justify-between items-center py-4 border-b border-white/5 last:border-0">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-2 h-2 rounded-full ${log.isActual ? 'bg-cyan-400' : 'bg-stone-800'}"></div>
+                                    <span class="text-sm font-bold ${log.isActual ? 'text-stone-300' : 'text-stone-700 italic'}">
+                                        ${log.isActual ? new Date(log.date).toLocaleDateString('en-PH', { month: 'short', day: 'numeric' }) : log.date}
+                                    </span>
+                                </div>
+                                <span class="text-sm font-black ${log.isActual ? 'text-amber-400' : 'text-stone-800'}">
+                                    ${log.hours.toFixed(2)} hrs
+                                </span>
+                            </div>
+                        `;
+                    });
+
+                    expandTr.innerHTML = `
+                        <td colspan="3" class="p-0">
+                            <div class="p-10 space-y-6">
+                                <div class="text-[10px] uppercase tracking-[0.4em] font-black text-stone-600 mb-6">Daily Breakdown</div>
+                                <div class="grid grid-cols-1 gap-3">
+                                    ${dailyBreakdownHTML}
+                                </div>
+                            </div>
+                        </td>
+                    `;
+                    mTbody.appendChild(expandTr);
+                }
+            });
+        }
+
+        // --- PDF Export Logic --- 
+        function formatTimeForPDF(time) {
+            if (!time) return '';
+            const [h, m] = time.split(':').map(Number);
+            const ampm = h >= 12 ? 'PM' : 'AM';
+            const hour = h % 12 || 12;
+            return `${hour}:${String(m).padStart(2, '0')} ${ampm}`;
+        }
+
+        document.getElementById('export-pdf-btn').addEventListener('click', () => {
+            const doc = new window.jspdf.jsPDF('p', 'mm', 'a4');
+
+            const logsByMonth = {};
+            logs.forEach(log => {
+                const date = new Date(log.date);
+                const monthYear = date.toLocaleDateString('en-PH', { month: 'long', year: 'numeric' });
+                if (!logsByMonth[monthYear]) logsByMonth[monthYear] = [];
+                logsByMonth[monthYear].push(log);
+            });
+
+            const months = Object.keys(logsByMonth).sort((a, b) => {
+                return new Date(a).getTime() - new Date(b).getTime();
+            });
+
+            if (months.length === 0) {
+                showDialog('Export Failed', 'No logs to export!');
+                return;
+            }
+
+            months.forEach((month, pageIndex) => {
+                if (pageIndex > 0) doc.addPage();
+
+                const monthDate = new Date(month);
+                const year = monthDate.getFullYear();
+                const monthIdx = monthDate.getMonth();
+                const daysInMonth = new Date(year, monthIdx + 1, 0).getDate();
+
+                const topMargin = 13.46;
+                const leftMargin = 17.53;
+                const rightMargin = 9.91;
+                const bottomMargin = 4.83;
+
+                const usableWidth = 210 - leftMargin - rightMargin;
+                const formWidth = usableWidth / 2;
+
+                const drawDTR = (startX) => {
+                    const centerX = startX + (formWidth / 2);
+                    const yOffset = topMargin;
+
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(14);
+                    doc.text('DAILY TIME RECORD', centerX, yOffset + 2, { align: 'center' });
+
+                    doc.setFontSize(11);
+                    doc.text(userName, centerX, yOffset + 10, { align: 'center' });
+                    doc.line(startX + 15, yOffset + 11, startX + formWidth - 15, yOffset + 11);
+                    doc.setFont('helvetica', 'normal');
+                    doc.setFontSize(7);
+                    doc.text('(Name)', centerX, yOffset + 14, { align: 'center' });
+
+                    doc.setFontSize(8.5);
+                    doc.text('For the month of', startX + 5, yOffset + 22);
+                    doc.setFont('helvetica', 'bold');
+                    doc.text(month, startX + 30, yOffset + 22);
+                    doc.line(startX + 29, yOffset + 23, startX + 75, yOffset + 23);
+
+                    doc.setFont('helvetica', 'normal');
+                    doc.text('Internship Start Date:', startX + 5, yOffset + 28);
+                    doc.setFont('helvetica', 'bold');
+                    const startDateStr = START_DATE.toISOString().split('T')[0];
+                    doc.text(startDateStr, startX + 36, yOffset + 28);
+                    doc.line(startX + 35, yOffset + 29, startX + 55, yOffset + 29);
+
+                    doc.setFont('helvetica', 'normal');
+                    doc.setFontSize(7.5);
+                    doc.text('Official Hours:    Regular days: 7:00 AM - 11:30 AM / 12:30 PM - 4:00 PM', startX + 5, yOffset + 33);
+                    doc.text('Saturdays:', startX + 25, yOffset + 37);
+                    doc.setFont('helvetica', 'italic');
+                    doc.text('Not Applicable', startX + 39, yOffset + 37);
+                    doc.setFont('helvetica', 'normal');
+
+                    const tableData = [];
+                    let totalMonthHours = 0;
+
+                    for (let day = 1; day <= 31; day++) {
+                        const dateStr = `${year}-${String(monthIdx + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                        const log = logsByMonth[month].find(l => l.date === dateStr);
+
+                        if (log && day <= daysInMonth) {
+                            totalMonthHours += log.dailyTotal;
+                            tableData.push([
+                                day,
+                                formatTimeForPDF(log.amIn),
+                                formatTimeForPDF(log.amOut),
+                                log.isEarlyOut ? '' : formatTimeForPDF(log.pmIn),
+                                log.isEarlyOut ? '' : formatTimeForPDF(log.pmOut),
+                                log.isOvertime ? `${Math.floor(log.dailyTotal)}\n(OT)` : (Math.floor(log.dailyTotal) || ''),
+                                Math.round((log.dailyTotal % 1) * 60) || ''
+                            ]);
+                        } else {
+                            tableData.push([day, '', '', '', '', '', '']);
+                        }
+                    }
+
+                    doc.autoTable({
+                        startY: yOffset + 41,
+                        margin: { left: startX + 2 },
+                        tableWidth: formWidth - 4,
+                        head: [
+                            [{ content: 'Day', rowSpan: 2 }, { content: 'A.M.', colSpan: 2 }, { content: 'P.M.', colSpan: 2 }, { content: 'Hours', rowSpan: 2 }, { content: 'Min.', rowSpan: 2 }],
+                            ['In', 'Out', 'In', 'Out']
+                        ],
+                        body: tableData,
+                        foot: [
+                            [
+                                { content: 'Total Hours', colSpan: 5, styles: { halign: 'right', fontStyle: 'bold' } },
+                                { content: `${totalMonthHours.toFixed(2)} hrs`, colSpan: 2, styles: { halign: 'center', fontStyle: 'bold' } }
+                            ]
+                        ],
+                        theme: 'grid',
+                        headStyles: {
+                            fillColor: [255, 255, 255],
+                            textColor: [0, 0, 0],
+                            lineWidth: 0.1,
+                            halign: 'center',
+                            valign: 'middle',
+                            fontStyle: 'bold',
+                            fontSize: 7
+                        },
+                        bodyStyles: {
+                            textColor: [0, 0, 0],
+                            lineWidth: 0.1,
+                            halign: 'center',
+                            fontSize: 6.5,
+                            cellPadding: 0.8
+                        },
+                        footStyles: {
+                            fillColor: [245, 245, 245],
+                            textColor: [0, 0, 0],
+                            lineWidth: 0.1,
+                            fontSize: 8,
+                            halign: 'center'
+                        },
+                        styles: { font: 'helvetica', overflow: 'visible' },
+                        columnStyles: {
+                            0: { cellWidth: 8 },
+                            1: { cellWidth: 16 },
+                            2: { cellWidth: 16 },
+                            3: { cellWidth: 16 },
+                            4: { cellWidth: 16 },
+                            5: { cellWidth: 9 },
+                            6: { cellWidth: 9 },
+                        }
+                    });
+
+                    const finalY = doc.lastAutoTable.finalY;
+
+                    doc.setFontSize(7);
+                    doc.setFont('helvetica', 'italic');
+                    const certText = 'I certify on my honor that the above is a true and correct report of the hours of work performed, record of which was made daily at the time of arrival and departure from office.';
+                    const splitCert = doc.splitTextToSize(certText, formWidth - 10);
+                    doc.text(splitCert, startX + 5, finalY + 10);
+
+                    doc.setFont('helvetica', 'normal');
+                    doc.setLineWidth(0.2);
+                    doc.line(startX + 10, finalY + 28, startX + formWidth - 10, finalY + 28);
+                    doc.text('(Signature)', centerX, finalY + 32, { align: 'center' });
+
+                    doc.text('VERIFIED as to the prescribed office hours:', startX + 5, finalY + 40);
+                    doc.line(startX + 10, finalY + 52, startX + formWidth - 10, finalY + 52);
+                    doc.text('(Supervisor)', centerX, finalY + 56, { align: 'center' });
+                };
+
+                drawDTR(leftMargin);              // Left form
+                drawDTR(leftMargin + formWidth);  // Right form
+            });
+
+            const lastName = userName.split(' ').pop() || 'User';
+            const course = userProgram || 'BA';
+            doc.save(`DTR - ${lastName} - ${course}.pdf`);
+        });
+
+        // Real-Time Clock
+        let _clockLastDate = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Manila' });
+
+        function tickClock() {
+            const now = new Date();
+            const h = now.getHours();
+            const m = String(now.getMinutes()).padStart(2, '0');
+            const s = String(now.getSeconds()).padStart(2, '0');
+            const ampm = h >= 12 ? 'PM' : 'AM';
+            const h12 = String(h % 12 || 12).padStart(2, '0');
+            const clockEl = document.getElementById('live-clock');
+            const dateEl = document.getElementById('live-date');
+            
+            const blinkColons = '<span class="text-cyan-400" style="animation:blink 1s step-start infinite">:</span>';
+            
+            if (clockEl) clockEl.innerHTML =
+                `${h12}${blinkColons}${m}${blinkColons}${s} <span class="text-stone-500 text-2xl">${ampm}</span>`;
+            if (dateEl) dateEl.textContent = now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+            // Automated Overtime Banner Update
+            const otBanner = document.getElementById('overtime-banner-container');
+            if (otBanner) {
+                const todayStrTz = now.toLocaleDateString('en-CA', { timeZone: 'Asia/Manila' });
+                // Reset state if a new day starts
+                if (overtimeStatusObj.date !== todayStrTz) {
+                    overtimeStatusObj = { date: todayStrTz, confirmed: null };
+                    localStorage.setItem('ojt_overtime_status', JSON.stringify(overtimeStatusObj));
+                }
+                
+                if (h >= 16) {
+                    document.body.classList.add('overtime-bg');
+                    if (otBanner.classList.contains('hidden')) {
+                        otBanner.classList.remove('hidden');
+                        setTimeout(() => {
+                            otBanner.classList.remove('opacity-0', 'translate-y-[-10px]');
+                        }, 50);
+                    }
+                    if (!otBanner.dataset.uiUpdated) {
+                        updateOvertimeBannerUI();
+                        otBanner.dataset.uiUpdated = 'true';
+                    }
+                } else {
+                    document.body.classList.remove('overtime-bg');
+                    otBanner.classList.add('hidden', 'opacity-0', 'translate-y-[-10px]');
+                    otBanner.dataset.uiUpdated = '';
+                }
+            }
+
+            // Screen Saver Clock Sync
+            const bssClock = document.getElementById('bss-clock');
+            const bssAmPm = document.getElementById('bss-ampm');
+            if (bssClock) bssClock.innerHTML = `${h12}${blinkColons}${m}${blinkColons}${s}`;
+            if (bssAmPm) bssAmPm.textContent = ampm;
+
+            // Auto-advance date at midnight
+            const todayStr = now.toLocaleDateString('en-CA', { timeZone: 'Asia/Manila' });
+            if (todayStr !== _clockLastDate) {
+                _clockLastDate = todayStr;
+                const logDateEl = document.getElementById('log-date');
+                if (logDateEl) logDateEl.value = todayStr;
+                renderApp();
+            }
+        }
+        tickClock();
+        setInterval(tickClock, 1000);
+
+        // Add blink keyframe for clock colon
+        const blinkStyle = document.createElement('style');
+        blinkStyle.textContent = `@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }`;
+        document.head.appendChild(blinkStyle);
+
+        // Update Progress Bar
+        window.updateProgressBar = function (totalHours) {
+            const pct = Math.min(100, (totalHours / TARGET_HOURS) * 100);
+            const fill = document.getElementById('ojt-progress-fill');
+            const label = document.getElementById('progress-bar-label');
+            const pctLabel = document.getElementById('progress-bar-pct');
+            if (fill) fill.style.width = pct + '%';
+            if (label) label.textContent = `${totalHours.toFixed(2)} / ${TARGET_HOURS}.00 hrs`;
+            if (pctLabel) pctLabel.textContent = `${pct.toFixed(1)}%`;
+            // Reveal bar
+            const barWrap = document.getElementById('anim-progress-bar');
+            if (barWrap) barWrap.classList.remove('opacity-0');
+        }
+
+        // Prevent closing app without PM Out (afternoon log-out) being filled
+        window.addEventListener('beforeunload', function (e) {
+            const pmOut = document.getElementById('pm-out');
+            const earlyOut = document.getElementById('early-out');
+            const isEarlyOut = earlyOut && earlyOut.checked;
+
+            if (pmOut && !pmOut.value && !isEarlyOut) {
+                const msg = 'You have not logged your PM Out (afternoon log-out) time yet. Are you sure you want to leave?';
+                e.preventDefault();
+                e.returnValue = msg;
+                return msg;
+            }
+        });
+
+        // Run Init App
+        initApp();
+    </script>
+</body>
+
+</html>
