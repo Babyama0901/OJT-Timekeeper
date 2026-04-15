@@ -3062,6 +3062,14 @@
                 return;
             }
 
+            // UI Feedback
+            const btnIcon = document.querySelector('button[onclick*="import-pdf-input"] i');
+            if(btnIcon) {
+                btnIcon.setAttribute('data-lucide', 'loader-2');
+                btnIcon.classList.add('animate-spin');
+                lucide.createIcons();
+            }
+
             try {
                 const arrayBuffer = await file.arrayBuffer();
                 const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
@@ -3078,6 +3086,9 @@
 
                     textContent.items.forEach(item => {
                         const str = item.str.trim();
+                        // Isolate only the LEFT form (X < 290) since the PDF renders two forms (left/right config) per page.
+                        if (item.transform[4] > 290) return; 
+
                         const monthMatch = str.match(/^(January|February|March|April|May|June|July|August|September|October|November|December)\s(\d{4})$/i);
                         if (monthMatch) {
                             currentMonth = monthMatch[1];
@@ -3092,7 +3103,7 @@
                     
                     if (!currentMonth || !currentYear) {
                          const mm = textContent.items.find(it => /^(January|February|March|April|May|June|July|August|September|October|November|December)$/i.test(it.str.trim()));
-                         if (mm) currentMonth = mm.str.trim();
+                         if (mm && mm.transform[4] < 290) currentMonth = mm.str.trim();
                          currentYear = '2026';
                     }
 
@@ -3103,24 +3114,23 @@
                     const monthNumStr = monthMap[currentMonth] || '01';
 
                     sortedY.forEach(y => {
-                        const cols = rowsObj[y].sort((a,b) => a.x - b.x).map(c => c.text).filter(t => t);
+                        const cols = rowsObj[y].sort((a,b) => a.x - b.x); // Sort columns physically left to right
                         
                         if (cols.length >= 2) {
-                            const dayNum = parseInt(cols[0]);
-                            if (!isNaN(dayNum) && dayNum >= 1 && dayNum <= 31 && cols[0] === String(dayNum)) {
+                            const dayText = cols[0].text;
+                            const dayNum = parseInt(dayText);
+                            if (!isNaN(dayNum) && dayNum >= 1 && dayNum <= 31 && dayText === String(dayNum)) {
                                 
-                                const allTimes = cols.filter(c => /^\d{1,2}:\d{2}\s?[AP]M$/i.test(c));
+                                const allTimes = cols.filter(c => /^\d{1,2}:\d{2}\s?[AP]M$/i.test(c.text));
                                 let amIn = '', amOut = '', pmIn = '', pmOut = '';
                                 
-                                if (allTimes.length === 2) {
-                                    amIn = convertTo24(allTimes[0]);
-                                    amOut = convertTo24(allTimes[1]);
-                                } else if (allTimes.length === 4) {
-                                    amIn = convertTo24(allTimes[0]);
-                                    amOut = convertTo24(allTimes[1]);
-                                    pmIn = convertTo24(allTimes[2]);
-                                    pmOut = convertTo24(allTimes[3]);
-                                }
+                                // Map by strict X coordinate bounds as drawn by autoTable in the A4 space
+                                allTimes.forEach(t => {
+                                    if (t.x < 125) amIn = convertTo24(t.text);
+                                    else if (t.x < 170) amOut = convertTo24(t.text);
+                                    else if (t.x < 215) pmIn = convertTo24(t.text);
+                                    else pmOut = convertTo24(t.text);
+                                });
 
                                 if (amIn && amOut) {
                                     const dateStr = `${currentYear}-${monthNumStr}-${String(dayNum).padStart(2, '0')}`;
@@ -3145,7 +3155,7 @@
                                     };
                                     
                                     if (existingIdx >= 0) {
-                                        logs[existingIdx] = newEntry; // Overwrite
+                                        logs[existingIdx] = newEntry; // Overwrite intelligently
                                     } else {
                                         logs.push(newEntry);
                                     }
@@ -3159,14 +3169,25 @@
                 // Save and refresh
                 localStorage.setItem('ojt_logs', JSON.stringify(logs));
                 renderApp();
-                lucide.createIcons();
+                
+                if(btnIcon) {
+                    btnIcon.setAttribute('data-lucide', 'upload');
+                    btnIcon.classList.remove('animate-spin');
+                    lucide.createIcons();
+                }
+                
                 e.target.value = ""; // clear input
-                setTimeout(() => showDialog('Import Successful', `Successfully imported and merged ${mergedCount} daily entries from the DTR.`), 200);
+                setTimeout(() => showDialog('Import Successful', `Successfully scanned the DTR File!\n\nImported and merged ${mergedCount} logs into your personal timeline.`), 300);
 
             } catch (err) {
                 console.error(err);
+                if(btnIcon) {
+                    btnIcon.setAttribute('data-lucide', 'upload');
+                    btnIcon.classList.remove('animate-spin');
+                    lucide.createIcons();
+                }
                 e.target.value = "";
-                showDialog('Import Failed', 'Could not parse the PDF properly. Please ensure it is a valid DTR PDF generated by the Time Keeper.');
+                showDialog('Import Failed', 'Could not parse the PDF properly. Make sure this file was explicitly generated by this DTR system.');
             }
         });
 
