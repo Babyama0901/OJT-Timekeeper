@@ -191,6 +191,12 @@
 </head>
 
 <body class="min-h-screen p-4 md:p-8 max-w-7xl mx-auto overflow-x-hidden relative">
+    <script>
+        // Immediate Session Check to prevent login form flash
+        if (localStorage.getItem('ojt_is_authed') === 'true') {
+            document.write('<style>#auth-overlay { opacity: 0 !important; pointer-events: none !important; display: none !important; }</style>');
+        }
+    </script>
     
     <!-- Secure Vault Overlay -->
     <div id="auth-overlay" class="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-stone-950/95 backdrop-blur-2xl transition-all duration-700">
@@ -1233,6 +1239,7 @@
         auth.onAuthStateChanged((user) => {
             if (user) {
                 currentUser = user;
+                localStorage.setItem('ojt_is_authed', 'true');
                 const overlay = document.getElementById('auth-overlay');
                 if (overlay) {
                     overlay.style.opacity = '0';
@@ -1258,14 +1265,18 @@
                 }
             } else {
                 currentUser = null;
+                localStorage.removeItem('ojt_is_authed');
                 const wrap = document.getElementById('app-wrapper');
                 if (wrap) wrap.classList.add('opacity-0');
                 setTimeout(() => {
                     if (wrap) wrap.classList.add('hidden');
                     const ol = document.getElementById('auth-overlay');
-                    if (ol) ol.style.display = 'flex';
-                    void ol?.offsetWidth;
-                    if (ol) ol.style.opacity = '1';
+                    if (ol) {
+                        ol.style.display = 'flex';
+                        ol.style.pointerEvents = 'auto';
+                        void ol.offsetWidth;
+                        ol.style.opacity = '1';
+                    }
                 }, 700);
             }
         });
@@ -3620,6 +3631,16 @@
 
             if (pmOut && !pmOut.value && !isEarlyOut) {
                 const msg = 'You have not logged your PM Out (afternoon log-out) time yet. Are you sure you want to leave?';
+                e.preventDefault();
+                e.returnValue = msg;
+                return msg;
+            }
+        });
+
+        // Reload Protection
+        window.addEventListener('beforeunload', function (e) {
+            if (currentUser) {
+                const msg = 'You are currently logged into CICT Timekeeper. Are you sure you want to refresh? Any unsaved form progress might be lost.';
                 e.preventDefault();
                 e.returnValue = msg;
                 return msg;
