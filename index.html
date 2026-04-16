@@ -184,7 +184,48 @@
     </style>
 </head>
 
-<body class="min-h-screen p-4 md:p-8 max-w-7xl mx-auto overflow-x-hidden">
+<body class="min-h-screen p-4 md:p-8 max-w-7xl mx-auto overflow-x-hidden relative">
+    
+    <!-- Secure Vault Overlay -->
+    <div id="auth-overlay" class="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-stone-950/95 backdrop-blur-2xl transition-all duration-700">
+        <div class="absolute inset-0 overflow-hidden pointer-events-none">
+            <div class="absolute top-0 right-1/4 w-[500px] h-[500px] bg-cyan-500/10 rounded-full blur-[120px] animate-pulse"></div>
+            <div class="absolute bottom-0 left-1/4 w-[400px] h-[400px] bg-emerald-500/10 rounded-full blur-[100px] animate-pulse" style="animation-delay: 2s;"></div>
+        </div>
+        <div class="relative z-10 w-full max-w-md p-6">
+            <div class="glass rounded-[3rem] p-8 border border-white/10 shadow-2xl overflow-hidden relative">
+                <div class="text-center mb-8">
+                    <i data-lucide="lock" class="w-12 h-12 text-cyan-400 mx-auto mb-4"></i>
+                    <h2 class="text-3xl font-black text-stone-50 tracking-wide">Vault Access</h2>
+                    <p class="text-stone-400 text-sm mt-2 font-medium">Enter your credentials</p>
+                </div>
+                <!-- Auth Content -->
+                <div class="relative overflow-hidden" id="auth-forms-container" style="min-height: 280px;">
+                    <form id="login-form" class="space-y-5 transition-all duration-500 transform translate-x-0 w-full absolute top-0 left-0">
+                        <input type="text" id="login-username" required autocomplete="username" class="w-full bg-stone-900/50 border border-white/5 rounded-2xl px-5 py-4 focus:outline-none focus:ring-2 focus:ring-cyan-500/40 text-stone-50 font-bold transition-all placeholder:text-stone-600" placeholder="Username" />
+                        <input type="password" id="login-password" required autocomplete="current-password" class="w-full bg-stone-900/50 border border-white/5 rounded-2xl px-5 py-4 focus:outline-none focus:ring-2 focus:ring-cyan-500/40 text-stone-50 font-bold transition-all placeholder:text-stone-600" placeholder="Password" />
+                        <button type="submit" class="w-full py-4 mt-2 bg-cyan-500 hover:bg-cyan-400 text-stone-950 font-black tracking-widest uppercase rounded-2xl transition-all shadow-[0_0_20px_rgba(34,211,238,0.2)] hover:shadow-[0_0_30px_rgba(34,211,238,0.4)] hover:-translate-y-1 active:scale-95 flex justify-center items-center gap-2"><i data-lucide="log-in" class="w-5 h-5"></i> Enter Vault</button>
+                        <p id="login-error" class="text-red-400 text-center text-xs font-black uppercase tracking-widest hidden mt-4">Invalid credentials</p>
+                        <div class="text-center mt-6">
+                            <button type="button" onclick="toggleAuthMode()" class="text-xs font-bold text-stone-500 hover:text-cyan-400 uppercase tracking-widest transition-colors">Create New Account</button>
+                        </div>
+                    </form>
+                    <form id="register-form" class="space-y-5 transition-all duration-500 transform translate-x-full absolute top-0 left-0 w-full opacity-0 pointer-events-none">
+                        <input type="text" id="reg-username" required autocomplete="off" class="w-full bg-stone-900/50 border border-white/5 rounded-2xl px-5 py-4 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 text-stone-50 font-bold transition-all placeholder:text-stone-600" placeholder="New Username" />
+                        <input type="password" id="reg-password" required autocomplete="new-password" class="w-full bg-stone-900/50 border border-white/5 rounded-2xl px-5 py-4 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 text-stone-50 font-bold transition-all placeholder:text-stone-600" placeholder="New Password" />
+                        <button type="submit" class="w-full py-4 mt-2 bg-emerald-500 hover:bg-emerald-400 text-stone-950 font-black tracking-widest uppercase rounded-2xl transition-all shadow-[0_0_20px_rgba(16,185,129,0.2)] hover:shadow-[0_0_30px_rgba(16,185,129,0.4)] hover:-translate-y-1 active:scale-95 flex justify-center items-center gap-2"><i data-lucide="user-plus" class="w-5 h-5"></i> Register Account</button>
+                        <p id="reg-error" class="text-red-400 text-center text-xs font-black uppercase tracking-widest hidden mt-4">Username taken</p>
+                        <div class="text-center mt-6">
+                            <button type="button" onclick="toggleAuthMode()" class="text-xs font-bold text-stone-500 hover:text-cyan-400 uppercase tracking-widest transition-colors">Back to Login</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Wrapper -->
+    <div id="app-wrapper" class="hidden opacity-0 transition-opacity duration-1000">
     <!-- Navigation Bar -->
     <nav class="fixed top-6 left-1/2 -translate-x-1/2 z-50 w-max max-w-[95vw] px-2" id="top-nav">
         <div class="nav-glass rounded-3xl p-2 md:p-3 flex items-center justify-between md:justify-around gap-1 md:gap-2 overflow-x-auto no-scrollbar">
@@ -850,6 +891,8 @@
     </footer>
 </main>
 
+    </div>
+
     <!-- Break Time Screen Saver -->
     <div id="break-screen-saver" class="fixed inset-0 z-[100] flex flex-col items-center justify-center opacity-0 pointer-events-none transition-all duration-700 bg-stone-950/90 backdrop-blur-2xl">
         <div class="absolute inset-0 overflow-hidden pointer-events-none">
@@ -1044,12 +1087,12 @@
         let userSection = '4A';
         let expandedMonth = null;
 
-        let overtimeStatusObj = JSON.parse(localStorage.getItem('ojt_overtime_status')) || { date: null, confirmed: null };
+        let overtimeStatusObj = JSON.parse(localStorage.getItem('ojt_overtime_status_' + currentUser)) || { date: null, confirmed: null };
         
         window.confirmOvertime = function(isOvertime) {
             const todayStrTz = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Manila' });
             overtimeStatusObj = { date: todayStrTz, confirmed: isOvertime };
-            localStorage.setItem('ojt_overtime_status', JSON.stringify(overtimeStatusObj));
+            localStorage.setItem('ojt_overtime_status_' + currentUser, JSON.stringify(overtimeStatusObj));
             updateOvertimeBannerUI();
         };
 
@@ -1490,7 +1533,7 @@
 
         function getLockKey(fieldId) {
             const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Manila' });
-            return `ojt_lock_${fieldId}_${todayStr}`;
+            return `ojt_lock_${fieldId}_${todayStr}_${currentUser}`;
         }
 
         // Show/hide the Lock-In button based on whether the field has a value
@@ -1595,19 +1638,19 @@
         // Initialize App
         function initApp() {
             // Load from localStorage
-            const savedUserName = localStorage.getItem('ojt_user_name');
+            const savedUserName = localStorage.getItem('ojt_user_name_' + currentUser);
             if (savedUserName) userName = savedUserName;
             document.getElementById('user-name-input').value = userName;
 
-            const savedProgram = localStorage.getItem('ojt_user_program');
+            const savedProgram = localStorage.getItem('ojt_user_program_' + currentUser);
             if (savedProgram) userProgram = savedProgram;
             document.getElementById('user-program-input').value = userProgram;
 
-            const savedSection = localStorage.getItem('ojt_user_section');
+            const savedSection = localStorage.getItem('ojt_user_section_' + currentUser);
             if (savedSection) userSection = savedSection;
             document.getElementById('user-section-input').value = userSection;
 
-            let savedLogs = localStorage.getItem('ojt_logs');
+            let savedLogs = localStorage.getItem('ojt_logs_' + currentUser);
             if (savedLogs) {
                 logs = JSON.parse(savedLogs);
 
@@ -1732,17 +1775,17 @@
         // Profile Info Sync
         document.getElementById('user-name-input').addEventListener('input', (e) => {
             userName = e.target.value;
-            localStorage.setItem('ojt_user_name', userName);
+            localStorage.setItem('ojt_user_name_' + currentUser, userName);
         });
 
         document.getElementById('user-program-input').addEventListener('input', (e) => {
             userProgram = e.target.value;
-            localStorage.setItem('ojt_user_program', userProgram);
+            localStorage.setItem('ojt_user_program_' + currentUser, userProgram);
         });
 
         document.getElementById('user-section-input').addEventListener('input', (e) => {
             userSection = e.target.value;
-            localStorage.setItem('ojt_user_section', userSection);
+            localStorage.setItem('ojt_user_section_' + currentUser, userSection);
         });
 
         // Early Out Checkbox
@@ -1840,7 +1883,7 @@
             logs = [newLog, ...otherLogs].sort((a, b) => b.date.localeCompare(a.date));
 
             // Save & Render
-            localStorage.setItem('ojt_logs', JSON.stringify(logs));
+            localStorage.setItem('ojt_logs_' + currentUser, JSON.stringify(logs));
 
             // Reset Early Out for next entry
             document.getElementById('early-out').checked = false;
@@ -1910,7 +1953,7 @@
         // Delete Log
         window.deleteLog = function (id) {
             logs = logs.filter(log => log.id !== id);
-            localStorage.setItem('ojt_logs', JSON.stringify(logs));
+            localStorage.setItem('ojt_logs_' + currentUser, JSON.stringify(logs));
             renderApp();
         }
 
@@ -1939,7 +1982,7 @@
                 dailyTotal: newDailyTotal
             };
 
-            localStorage.setItem('ojt_logs', JSON.stringify(logs));
+            localStorage.setItem('ojt_logs_' + currentUser, JSON.stringify(logs));
             renderApp();
 
             // Show quick feedback toast
@@ -2067,7 +2110,7 @@
                 hasBeenEdited: true
             };
 
-            localStorage.setItem('ojt_logs', JSON.stringify(logs));
+            localStorage.setItem('ojt_logs_' + currentUser, JSON.stringify(logs));
             closeEditDialog();
             renderApp();
         }
@@ -3172,7 +3215,7 @@
                 
                 // Save and refresh strictly sorted timeline
                 logs.sort((a,b) => b.date.localeCompare(a.date));
-                localStorage.setItem('ojt_logs', JSON.stringify(logs));
+                localStorage.setItem('ojt_logs_' + currentUser, JSON.stringify(logs));
                 renderApp();
                 
                 if(btnIcon) {
@@ -3234,7 +3277,7 @@
                 // Reset state if a new day starts
                 if (overtimeStatusObj.date !== todayStrTz) {
                     overtimeStatusObj = { date: todayStrTz, confirmed: null };
-                    localStorage.setItem('ojt_overtime_status', JSON.stringify(overtimeStatusObj));
+                    localStorage.setItem('ojt_overtime_status_' + currentUser, JSON.stringify(overtimeStatusObj));
                 }
                 
                 if (h >= 16) {
