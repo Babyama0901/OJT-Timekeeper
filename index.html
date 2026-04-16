@@ -528,102 +528,134 @@
                     <div class="hidden lg:block w-px bg-white/5 self-stretch"></div>
 
                     <!-- Log Session Section -->
-                    <div>
-                        <h2 class="text-xl font-sans font-black mb-5 text-stone-50 flex items-center gap-3">
-                            <i data-lucide="clock" class="text-cyan-400 w-5 h-5"></i>
-                            Log Session
-                        </h2>
-                        <form id="log-form" class="space-y-5">
-                            <div>
-                                <label class="data-grid-header block mb-2">Date</label>
+                    <div id="anim-input-form" class="transition-all duration-1000 opacity-0 translate-x-[-40px]">
+                        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                            <h2 class="text-2xl font-sans font-black text-stone-50 flex items-center gap-3">
+                                <i data-lucide="clock" class="text-cyan-400 w-6 h-6"></i>
+                                Log Session
+                            </h2>
+                            <div class="w-full md:w-48">
+                                <label class="text-[9px] font-black uppercase tracking-widest text-stone-500 mb-1.5 block">Session Date</label>
                                 <input type="date" id="log-date"
-                                    class="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-500/40 focus:border-cyan-500/50 transition-all text-stone-50 font-bold text-base tracking-wide [color-scheme:dark]"
+                                    class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-cyan-500/40 transition-all text-stone-50 font-bold text-sm [color-scheme:dark]"
                                     required />
                             </div>
+                        </div>
 
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label class="data-grid-header block mb-2">AM In</label>
-                                    <div class="relative group/time">
-                                        <i data-lucide="sun"
-                                            class="absolute left-4 top-1/2 -translate-y-1/2 text-cyan-400/50 w-5 h-5 pointer-events-none"></i>
-                                        <input type="time" id="am-in"
-                                            class="w-full bg-white/5 border border-white/10 rounded-2xl pl-12 pr-14 py-3.5 focus:outline-none focus:ring-2 focus:ring-cyan-500/40 focus:border-cyan-500/50 transition-all text-stone-50 font-bold text-base tracking-widest [color-scheme:dark]"
-                                            oninput="computeExpectedLogout(); renderCalendar()" required />
+                        <form id="log-form" class="space-y-6">
+                            <!-- Morning Session Group -->
+                            <div class="p-6 bg-white/[0.02] border border-white/5 rounded-[2rem] relative overflow-hidden group/session">
+                                <div class="absolute top-0 right-0 p-4 opacity-10 group-hover/session:opacity-20 transition-opacity">
+                                    <i data-lucide="sun" class="w-12 h-12 text-cyan-400"></i>
                                 </div>
-                                <div>
-                                    <label class="data-grid-header block mb-2">AM Out</label>
-                                    <div class="relative group/time">
-                                        <i data-lucide="coffee"
-                                            class="absolute left-4 top-1/2 -translate-y-1/2 text-cyan-400/50 w-5 h-5 pointer-events-none"></i>
-                                        <input type="time" id="am-out"
-                                            class="w-full bg-white/5 border border-white/10 rounded-2xl pl-12 pr-14 py-3.5 focus:outline-none focus:ring-2 focus:ring-cyan-500/40 focus:border-cyan-500/50 transition-all text-stone-50 font-bold text-base tracking-widest [color-scheme:dark]"
-                                            oninput="computeExpectedLogout()" required />
-                                </div>
-                            </div>
-
-                            <div class="grid grid-cols-2 gap-4">
-                                <div id="pm-in-container" class="transition-all">
-                                    <label class="data-grid-header block mb-2">PM In</label>
-                                    <div class="relative group/time">
-                                        <i data-lucide="coffee"
-                                            class="absolute left-4 top-1/2 -translate-y-1/2 text-cyan-400/50 w-5 h-5 pointer-events-none"></i>
-                                        <input type="time" id="pm-in"
-                                            class="w-full bg-white/5 border border-white/10 rounded-2xl pl-12 pr-14 py-3.5 focus:outline-none focus:ring-2 focus:ring-cyan-500/40 focus:border-cyan-500/50 transition-all text-stone-50 font-bold text-base tracking-widest [color-scheme:dark]"
-                                            oninput="computeExpectedLogout()" required />
-                                </div>
-                                <div id="pm-out-container" class="transition-all">
-                                    <label class="data-grid-header block mb-2">PM Out</label>
-                                    <div class="relative group/time">
-                                        <i data-lucide="moon"
-                                            class="absolute left-4 top-1/2 -translate-y-1/2 text-cyan-400/50 w-5 h-5 pointer-events-none"></i>
-                                        <input type="time" id="pm-out"
-                                            class="w-full bg-white/5 border border-white/10 rounded-2xl pl-12 pr-14 py-3.5 focus:outline-none focus:ring-2 focus:ring-cyan-500/40 focus:border-cyan-500/50 transition-all text-stone-50 font-bold text-base tracking-widest [color-scheme:dark]"
-                                            oninput="" required />
-                                </div>
-                            </div>
-
-                            <!-- Expected Logout Banner -->
-                            <div id="expected-logout-banner" class="flex items-center justify-between gap-4 px-6 py-4 bg-amber-400/5 border border-amber-400/15 rounded-2xl">
-                                <div class="flex items-center gap-3">
-                                    <i data-lucide="alarm-clock" class="w-4 h-4 text-amber-400/60"></i>
-                                    <span class="text-[11px] font-black uppercase tracking-[0.25em] text-stone-500">Expected Logout</span>
-                                </div>
-                                <div class="flex items-center gap-3">
-                                    <span class="text-base font-black text-amber-400" id="expected-logout-time">—</span>
-                                    <span class="text-[10px] font-bold text-stone-600" id="expected-logout-note"></span>
-                                </div>
-                            </div>
-
-                            <div class="flex items-center gap-3">
-                                <!-- Early Out Checkbox -->
-                                <div class="flex-1 flex items-center gap-4 p-6 bg-white/5 rounded-3xl border border-white/5">
-                                    <label class="flex items-center gap-4 cursor-pointer group w-full">
-                                        <div class="relative flex items-center">
-                                            <input type="checkbox" id="early-out"
-                                                class="peer appearance-none w-7 h-7 border-2 border-white/10 rounded-xl checked:bg-cyan-500 checked:border-cyan-500 transition-all cursor-pointer" />
-                                            <i data-lucide="check-circle-2"
-                                                class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-stone-950 w-4 h-4 opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none"></i>
+                                <h3 class="text-[10px] font-black uppercase tracking-[0.2em] text-cyan-400/60 mb-5 flex items-center gap-2">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-cyan-500"></span>
+                                    Morning Session
+                                </h3>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="data-grid-header block mb-2">AM In</label>
+                                        <div class="relative group/time">
+                                            <i data-lucide="log-in" class="absolute left-4 top-1/2 -translate-y-1/2 text-stone-600 w-4 h-4 pointer-events-none"></i>
+                                            <input type="time" id="am-in"
+                                                class="w-full bg-stone-900/40 border border-white/5 rounded-2xl pl-11 pr-16 py-3.5 focus:outline-none focus:ring-2 focus:ring-cyan-500/40 transition-all text-stone-50 font-bold text-base tracking-widest [color-scheme:dark]"
+                                                oninput="computeExpectedLogout(); renderCalendar()" required />
+                                            <button type="button" onclick="setFieldToNow('am-in')"
+                                                class="absolute right-2 top-1/2 -translate-y-1/2 px-2.5 py-1.5 bg-stone-800 hover:bg-stone-700 text-stone-400 hover:text-cyan-400 text-[9px] font-black uppercase tracking-widest rounded-lg transition-all border border-white/5">
+                                                AUTO
+                                            </button>
                                         </div>
-                                        <span
-                                            class="text-sm font-black text-stone-400 group-hover:text-cyan-400 transition-colors uppercase tracking-[0.2em]">Early Out</span>
+                                    </div>
+                                    <div>
+                                        <label class="data-grid-header block mb-2">AM Out</label>
+                                        <div class="relative group/time">
+                                            <i data-lucide="log-out" class="absolute left-4 top-1/2 -translate-y-1/2 text-stone-600 w-4 h-4 pointer-events-none"></i>
+                                            <input type="time" id="am-out"
+                                                class="w-full bg-stone-900/40 border border-white/5 rounded-2xl pl-11 pr-16 py-3.5 focus:outline-none focus:ring-2 focus:ring-cyan-500/40 transition-all text-stone-50 font-bold text-base tracking-widest [color-scheme:dark]"
+                                                oninput="computeExpectedLogout()" required />
+                                            <button type="button" onclick="setFieldToNow('am-out')"
+                                                class="absolute right-2 top-1/2 -translate-y-1/2 px-2.5 py-1.5 bg-stone-800 hover:bg-stone-700 text-stone-400 hover:text-cyan-400 text-[9px] font-black uppercase tracking-widest rounded-lg transition-all border border-white/5">
+                                                AUTO
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Afternoon Session Group -->
+                            <div class="p-6 bg-white/[0.02] border border-white/5 rounded-[2rem] relative overflow-hidden group/session">
+                                <div class="absolute top-0 right-0 p-4 opacity-10 group-hover/session:opacity-20 transition-opacity">
+                                    <i data-lucide="moon" class="w-12 h-12 text-amber-400"></i>
+                                </div>
+                                <div class="flex items-center justify-between mb-5">
+                                    <h3 class="text-[10px] font-black uppercase tracking-[0.2em] text-amber-400/60 flex items-center gap-2">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                                        Afternoon Session
+                                    </h3>
+                                    <!-- Early Out Inline Toggle -->
+                                    <label class="flex items-center gap-2 cursor-pointer group">
+                                        <span class="text-[9px] font-black text-stone-500 uppercase tracking-widest group-hover:text-stone-300">Early Out</span>
+                                        <div class="relative">
+                                            <input type="checkbox" id="early-out" class="peer sr-only" />
+                                            <div class="w-8 h-4 bg-stone-800 rounded-full peer-checked:bg-amber-500/30 transition-colors border border-white/5"></div>
+                                            <div class="absolute left-1 top-1 w-2 h-2 bg-stone-500 rounded-full transition-all peer-checked:left-5 peer-checked:bg-amber-400"></div>
+                                        </div>
                                     </label>
                                 </div>
-                                <!-- Reset Button -->
-                                <button type="button" onclick="resetTimesForm()"
-                                    id="reset-times-btn"
-                                    title="Clear all login & logout times"
-                                    class="flex-1 flex items-center justify-center gap-2 p-6 bg-white/5 hover:bg-red-500/10 border border-white/5 hover:border-red-500/30 text-stone-500 hover:text-red-400 rounded-3xl transition-all duration-200 group">
-                                    <i data-lucide="rotate-ccw" class="w-4 h-4 transition-transform duration-300 group-hover:-rotate-45"></i>
-                                    <span class="text-sm font-black uppercase tracking-[0.2em]">Reset</span>
-                                </button>
+                                
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div id="pm-in-container" class="transition-all duration-500">
+                                        <label class="data-grid-header block mb-2">PM In</label>
+                                        <div class="relative group/time">
+                                            <i data-lucide="log-in" class="absolute left-4 top-1/2 -translate-y-1/2 text-stone-600 w-4 h-4 pointer-events-none"></i>
+                                            <input type="time" id="pm-in"
+                                                class="w-full bg-stone-900/40 border border-white/5 rounded-2xl pl-11 pr-16 py-3.5 focus:outline-none focus:ring-2 focus:ring-amber-500/40 transition-all text-stone-50 font-bold text-base tracking-widest [color-scheme:dark]"
+                                                oninput="computeExpectedLogout()" required />
+                                            <button type="button" onclick="setFieldToNow('pm-in')"
+                                                class="absolute right-2 top-1/2 -translate-y-1/2 px-2.5 py-1.5 bg-stone-800 hover:bg-stone-700 text-stone-400 hover:text-amber-400 text-[9px] font-black uppercase tracking-widest rounded-lg transition-all border border-white/5">
+                                                AUTO
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div id="pm-out-container" class="transition-all duration-500">
+                                        <label class="data-grid-header block mb-2">PM Out</label>
+                                        <div class="relative group/time">
+                                            <i data-lucide="log-out" class="absolute left-4 top-1/2 -translate-y-1/2 text-stone-600 w-4 h-4 pointer-events-none"></i>
+                                            <input type="time" id="pm-out"
+                                                class="w-full bg-stone-900/40 border border-white/5 rounded-2xl pl-11 pr-16 py-3.5 focus:outline-none focus:ring-2 focus:ring-amber-500/40 transition-all text-stone-50 font-bold text-base tracking-widest [color-scheme:dark]"
+                                                oninput="" required />
+                                            <button type="button" onclick="setFieldToNow('pm-out')"
+                                                class="absolute right-2 top-1/2 -translate-y-1/2 px-2.5 py-1.5 bg-stone-800 hover:bg-stone-700 text-stone-400 hover:text-amber-400 text-[9px] font-black uppercase tracking-widest rounded-lg transition-all border border-white/5">
+                                                AUTO
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Expected Logout integrated into PM card -->
+                                <div id="expected-logout-banner" class="mt-6 flex items-center justify-between gap-4 px-5 py-3.5 bg-amber-400/5 border border-amber-400/10 rounded-2xl transition-all">
+                                    <div class="flex items-center gap-3">
+                                        <i data-lucide="alarm-clock" class="w-4 h-4 text-amber-500/40"></i>
+                                        <span class="text-[10px] font-black uppercase tracking-widest text-stone-500">Est. Logout</span>
+                                    </div>
+                                    <div class="flex items-center gap-3">
+                                        <span class="text-sm font-black text-amber-400" id="expected-logout-time">—</span>
+                                        <span class="text-[9px] font-bold text-stone-600 uppercase" id="expected-logout-note"></span>
+                                    </div>
+                                </div>
                             </div>
 
-                            <div class="flex gap-3 mt-4">
+                            <div class="flex flex-col md:flex-row gap-3 pt-2">
                                 <button type="submit"
-                                    class="w-full bg-cyan-500 hover:bg-cyan-400 active:scale-98 text-stone-950 font-black py-4 rounded-2xl transition-all shadow-2xl shadow-cyan-500/20 flex items-center justify-center gap-2 text-base">
-                                    <i data-lucide="plus" class="w-5 h-5"></i>
+                                    class="flex-[2] bg-cyan-500 hover:bg-cyan-400 active:scale-95 text-stone-950 font-black py-4.5 rounded-[1.5rem] transition-all shadow-xl shadow-cyan-500/10 flex items-center justify-center gap-3 text-base group">
+                                    <i data-lucide="plus-circle" class="w-5 h-5 transition-transform group-hover:rotate-90"></i>
                                     LOG SESSION
+                                </button>
+                                <button type="button" onclick="resetTimesForm()"
+                                    id="reset-times-btn"
+                                    class="flex-1 bg-white/5 hover:bg-white/10 text-stone-400 hover:text-white font-black py-4.5 rounded-[1.5rem] transition-all border border-white/5 flex items-center justify-center gap-2 text-sm uppercase tracking-widest">
+                                    <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+                                    Reset
                                 </button>
                             </div>
                         </form>
