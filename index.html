@@ -1816,8 +1816,8 @@
                         if (log.isEarlyOut) {
                             dailyTotal = am;
                             isOvertime = false;
-                        } else if (isOvertime && (am + pm) >= 9) {
-                            dailyTotal = am + pm;
+                        } else if (isOvertime) {
+                            dailyTotal = 9.00;
                         } else {
                             isOvertime = false;
                         }
@@ -2009,8 +2009,8 @@
             if (isEarlyOut) {
                 dailyTotal = am;
                 finalIsOvertime = false;
-            } else if (finalIsOvertime && (am + pm) >= 9) {
-                dailyTotal = am + pm;
+            } else if (finalIsOvertime) {
+                dailyTotal = 9.00;
             } else {
                 finalIsOvertime = false;
             }
@@ -2124,7 +2124,7 @@
             if (actualHours <= 8) return;
 
             const newIsOvertime = !log.isOvertime;
-            const newDailyTotal = newIsOvertime ? actualHours : Math.min(8, actualHours);
+            const newDailyTotal = newIsOvertime ? 9.00 : Math.min(8, actualHours);
 
             logs[logIndex] = {
                 ...log,
@@ -2243,8 +2243,8 @@
             if (isEarlyOut) {
                 dailyTotal = am;
                 finalIsOvertime = false;
-            } else if (finalIsOvertime && (am + pm) >= 9) {
-                dailyTotal = am + pm;
+            } else if (finalIsOvertime) {
+                dailyTotal = 9.00;
             } else {
                 finalIsOvertime = false;
             }
@@ -3159,14 +3159,14 @@
                         const log = logsByMonth[month].find(l => l.date === dateStr);
 
                         if (log && day <= daysInMonth) {
-                            totalMonthHours += 9;
+                            totalMonthHours += log.dailyTotal;
                             tableData.push([
                                 day,
                                 formatTimeForPDF(log.amIn),
                                 formatTimeForPDF(log.amOut),
                                 log.isEarlyOut ? '' : formatTimeForPDF(log.pmIn),
                                 log.isEarlyOut ? '' : formatTimeForPDF(log.pmOut),
-                                '9',
+                                log.dailyTotal.toFixed(0),
                                 ''
                             ]);
                         } else {
