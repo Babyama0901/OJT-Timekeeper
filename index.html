@@ -1014,6 +1014,69 @@
         </div>
     </div>
 
+    <!-- Logout Summary Dialog Modal -->
+    <div id="logout-dialog"
+        class="fixed inset-0 z-[60] flex items-center justify-center opacity-0 pointer-events-none transition-all duration-300">
+        <div class="absolute inset-0 bg-stone-950/90 backdrop-blur-md" onclick="closeLogoutDialog()"></div>
+        <div class="glass relative p-8 md:p-10 rounded-[2.5rem] max-w-sm w-full mx-4 shadow-2xl border border-white/10 transform scale-95 transition-all duration-300"
+            id="logout-dialog-content">
+            <div class="flex items-center gap-4 mb-6 text-red-400">
+                <i data-lucide="log-out" class="w-8 h-8"></i>
+                <h3 class="text-2xl font-sans font-black text-stone-50">Sign Out</h3>
+            </div>
+            
+            <div class="space-y-6 mb-8">
+                <!-- Session Today -->
+                <div class="p-4 bg-white/5 rounded-2xl border border-white/5">
+                    <h4 class="text-[10px] font-black uppercase tracking-widest text-stone-500 mb-3">Today's Session</h4>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="flex flex-col">
+                            <span class="text-[9px] font-bold text-stone-600 uppercase">Login</span>
+                            <span id="logout-today-in" class="text-sm font-black text-stone-200">--:--</span>
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="text-[9px] font-bold text-stone-600 uppercase">Logout</span>
+                            <span id="logout-today-out" class="text-sm font-black text-stone-200">--:--</span>
+                        </div>
+                    </div>
+                    <div id="logout-today-status" class="mt-3 flex">
+                        <!-- Status badge injected here -->
+                    </div>
+                </div>
+
+                <!-- Overall Progress -->
+                <div class="p-4 bg-white/5 rounded-2xl border border-white/5">
+                    <h4 class="text-[10px] font-black uppercase tracking-widest text-stone-500 mb-3">Overall Progress</h4>
+                    <div class="flex items-end justify-between mb-2">
+                        <div class="flex flex-col">
+                            <span class="text-[9px] font-bold text-stone-600 uppercase">Gained</span>
+                            <span id="logout-gained-hrs" class="text-lg font-black text-emerald-400">0.00h</span>
+                        </div>
+                        <div class="flex flex-col items-end">
+                            <span class="text-[9px] font-bold text-stone-600 uppercase">Remaining</span>
+                            <span id="logout-remaining-hrs" class="text-lg font-black text-cyan-400">0.00h</span>
+                        </div>
+                    </div>
+                    <div class="w-full bg-white/5 h-1.5 rounded-full overflow-hidden">
+                        <div id="logout-progress-bar" class="bg-gradient-to-r from-emerald-500 to-cyan-500 h-full w-0 transition-all duration-1000"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex flex-col gap-3">
+                <button onclick="confirmLogout()"
+                    class="w-full py-4 bg-red-500 hover:bg-red-400 text-stone-950 font-black rounded-2xl transition-all shadow-lg hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-2">
+                    <i data-lucide="log-out" class="w-4 h-4"></i>
+                    Confirm Sign Out
+                </button>
+                <button onclick="closeLogoutDialog()"
+                    class="w-full py-4 bg-white/5 hover:bg-white/10 text-stone-300 font-black rounded-2xl transition-all active:scale-95">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Edit Dialog Modal -->
     <div id="edit-dialog"
         class="fixed inset-0 z-50 flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300">
@@ -1208,7 +1271,8 @@
         });
 
         document.getElementById('logout-btn')?.addEventListener('click', () => {
-            auth.signOut().then(() => location.reload());
+            if (typeof showLogoutSummary === 'function') showLogoutSummary();
+            else auth.signOut().then(() => location.reload());
         });
 
         // Constants (from React App.tsx)
@@ -1369,6 +1433,64 @@
             dialog.classList.add('opacity-0', 'pointer-events-none');
             content.classList.remove('scale-100');
             content.classList.add('scale-95');
+        };
+
+        window.showLogoutSummary = function () {
+            const dialog = document.getElementById('logout-dialog');
+            const content = document.getElementById('logout-dialog-content');
+            
+            // 1. Core Derived Data for Overall Stats
+            const totalHoursServed = logs.reduce((acc, log) => acc + log.dailyTotal, 0);
+            const remainingHours = Math.max(0, TARGET_HOURS - totalHoursServed);
+            const progressPct = (totalHoursServed / TARGET_HOURS) * 100;
+
+            // 2. Identify Today's Entry
+            const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Manila' });
+            const todayLog = logs.find(l => l.date === todayStr);
+
+            // 3. Populate Data
+            document.getElementById('logout-gained-hrs').textContent = totalHoursServed.toFixed(2) + 'h';
+            document.getElementById('logout-remaining-hrs').textContent = remainingHours.toFixed(2) + 'h';
+            document.getElementById('logout-progress-bar').style.width = progressPct.toFixed(1) + '%';
+
+            if (todayLog) {
+                document.getElementById('logout-today-in').textContent = todayLog.amIn;
+                document.getElementById('logout-today-out').textContent = todayLog.isEarlyOut ? 'Early Out' : (todayLog.pmOut || '--:--');
+                
+                let statusHtml = '';
+                if (todayLog.isOvertime) {
+                    statusHtml = '<span class="px-2 py-0.5 bg-amber-500/10 text-amber-400 text-[10px] font-black uppercase tracking-widest rounded-md border border-amber-500/20">Overtime</span>';
+                } else if (todayLog.amIn <= '07:00') {
+                    statusHtml = '<span class="px-2 py-0.5 bg-emerald-500/10 text-emerald-400 text-[10px] font-black uppercase tracking-widest rounded-md border border-emerald-500/20">On-Time</span>';
+                } else {
+                    statusHtml = '<span class="px-2 py-0.5 bg-red-500/10 text-red-400 text-[10px] font-black uppercase tracking-widest rounded-md border border-red-500/20">Late / Partial</span>';
+                }
+                document.getElementById('logout-today-status').innerHTML = statusHtml;
+            } else {
+                document.getElementById('logout-today-in').textContent = '--:--';
+                document.getElementById('logout-today-out').textContent = '--:--';
+                document.getElementById('logout-today-status').innerHTML = '<span class="px-2 py-0.5 bg-white/5 text-stone-500 text-[10px] font-black uppercase tracking-widest rounded-md border border-white/10">No Session Today</span>';
+            }
+
+            // 4. Show Modal
+            dialog.classList.remove('opacity-0', 'pointer-events-none');
+            content.classList.remove('scale-95');
+            content.classList.add('scale-100');
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        };
+
+        window.closeLogoutDialog = function () {
+            const dialog = document.getElementById('logout-dialog');
+            const content = document.getElementById('logout-dialog-content');
+            dialog.classList.add('opacity-0', 'pointer-events-none');
+            content.classList.remove('scale-100');
+            content.classList.add('scale-95');
+        };
+
+        window.confirmLogout = function () {
+            // Visual feedback before reload
+            document.querySelector('#logout-dialog-content').classList.add('opacity-50');
+            auth.signOut().then(() => location.reload());
         };
 
         window.showCalendarSessionDetails = function (dateStr) {
