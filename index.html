@@ -11,6 +11,12 @@
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
 
+    
+    <!-- Firebase SDK Setup -->
+    <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore-compat.js"></script>
+
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
 
@@ -1087,12 +1093,13 @@
         let userSection = '4A';
         let expandedMonth = null;
 
-        let overtimeStatusObj = JSON.parse(localStorage.getItem('ojt_overtime_status_' + currentUser)) || { date: null, confirmed: null };
+        let overtimeStatusObj = JSON.parse(localStorage.getItem('ojt_overtime_status')) || { date: null, confirmed: null };
         
         window.confirmOvertime = function(isOvertime) {
             const todayStrTz = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Manila' });
             overtimeStatusObj = { date: todayStrTz, confirmed: isOvertime };
-            localStorage.setItem('ojt_overtime_status_' + currentUser, JSON.stringify(overtimeStatusObj));
+            localStorage.setItem('ojt_overtime_status', JSON.stringify(overtimeStatusObj));
+            syncToCloud({ overtimeStatusObj: overtimeStatusObj });
             updateOvertimeBannerUI();
         };
 
@@ -1533,7 +1540,7 @@
 
         function getLockKey(fieldId) {
             const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Manila' });
-            return `ojt_lock_${fieldId}_${todayStr}_${currentUser}`;
+            return `ojt_lock_${fieldId}_${todayStr}`; // User namespace handled by firebase auth layer isolation
         }
 
         // Show/hide the Lock-In button based on whether the field has a value
@@ -1638,19 +1645,19 @@
         // Initialize App
         function initApp() {
             // Load from localStorage
-            const savedUserName = localStorage.getItem('ojt_user_name_' + currentUser);
+            const savedUserName = localStorage.getItem('ojt_user_name');
             if (savedUserName) userName = savedUserName;
             document.getElementById('user-name-input').value = userName;
 
-            const savedProgram = localStorage.getItem('ojt_user_program_' + currentUser);
+            const savedProgram = localStorage.getItem('ojt_user_program');
             if (savedProgram) userProgram = savedProgram;
             document.getElementById('user-program-input').value = userProgram;
 
-            const savedSection = localStorage.getItem('ojt_user_section_' + currentUser);
+            const savedSection = localStorage.getItem('ojt_user_section');
             if (savedSection) userSection = savedSection;
             document.getElementById('user-section-input').value = userSection;
 
-            let savedLogs = localStorage.getItem('ojt_logs_' + currentUser);
+            let savedLogs = localStorage.getItem('ojt_logs');
             if (savedLogs) {
                 logs = JSON.parse(savedLogs);
 
@@ -1775,17 +1782,20 @@
         // Profile Info Sync
         document.getElementById('user-name-input').addEventListener('input', (e) => {
             userName = e.target.value;
-            localStorage.setItem('ojt_user_name_' + currentUser, userName);
+            syncToCloud({ userName: userName });
+            localStorage.setItem('ojt_user_name', userName);
         });
 
         document.getElementById('user-program-input').addEventListener('input', (e) => {
             userProgram = e.target.value;
-            localStorage.setItem('ojt_user_program_' + currentUser, userProgram);
+            syncToCloud({ userProgram: userProgram });
+            localStorage.setItem('ojt_user_program', userProgram);
         });
 
         document.getElementById('user-section-input').addEventListener('input', (e) => {
             userSection = e.target.value;
-            localStorage.setItem('ojt_user_section_' + currentUser, userSection);
+            syncToCloud({ userSection: userSection });
+            localStorage.setItem('ojt_user_section', userSection);
         });
 
         // Early Out Checkbox
@@ -1883,7 +1893,8 @@
             logs = [newLog, ...otherLogs].sort((a, b) => b.date.localeCompare(a.date));
 
             // Save & Render
-            localStorage.setItem('ojt_logs_' + currentUser, JSON.stringify(logs));
+            localStorage.setItem('ojt_logs', JSON.stringify(logs));
+            syncToCloud({ logs: logs });
 
             // Reset Early Out for next entry
             document.getElementById('early-out').checked = false;
@@ -1953,7 +1964,8 @@
         // Delete Log
         window.deleteLog = function (id) {
             logs = logs.filter(log => log.id !== id);
-            localStorage.setItem('ojt_logs_' + currentUser, JSON.stringify(logs));
+            localStorage.setItem('ojt_logs', JSON.stringify(logs));
+            syncToCloud({ logs: logs });
             renderApp();
         }
 
@@ -1982,7 +1994,8 @@
                 dailyTotal: newDailyTotal
             };
 
-            localStorage.setItem('ojt_logs_' + currentUser, JSON.stringify(logs));
+            localStorage.setItem('ojt_logs', JSON.stringify(logs));
+            syncToCloud({ logs: logs });
             renderApp();
 
             // Show quick feedback toast
@@ -2110,7 +2123,8 @@
                 hasBeenEdited: true
             };
 
-            localStorage.setItem('ojt_logs_' + currentUser, JSON.stringify(logs));
+            localStorage.setItem('ojt_logs', JSON.stringify(logs));
+            syncToCloud({ logs: logs });
             closeEditDialog();
             renderApp();
         }
@@ -3215,7 +3229,8 @@
                 
                 // Save and refresh strictly sorted timeline
                 logs.sort((a,b) => b.date.localeCompare(a.date));
-                localStorage.setItem('ojt_logs_' + currentUser, JSON.stringify(logs));
+                localStorage.setItem('ojt_logs', JSON.stringify(logs));
+            syncToCloud({ logs: logs });
                 renderApp();
                 
                 if(btnIcon) {
@@ -3277,7 +3292,8 @@
                 // Reset state if a new day starts
                 if (overtimeStatusObj.date !== todayStrTz) {
                     overtimeStatusObj = { date: todayStrTz, confirmed: null };
-                    localStorage.setItem('ojt_overtime_status_' + currentUser, JSON.stringify(overtimeStatusObj));
+                    localStorage.setItem('ojt_overtime_status', JSON.stringify(overtimeStatusObj));
+            syncToCloud({ overtimeStatusObj: overtimeStatusObj });
                 }
                 
                 if (h >= 16) {
