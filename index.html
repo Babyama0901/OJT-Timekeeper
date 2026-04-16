@@ -1073,6 +1073,143 @@
 
     <!-- Core JavaScript -->
     <script>
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyD5INaqTJOGwvoLz69qB0dh3YP9pAye2yc",
+            authDomain: "ojt-timekeeper.firebaseapp.com",
+            projectId: "ojt-timekeeper",
+            storageBucket: "ojt-timekeeper.firebasestorage.app",
+            messagingSenderId: "689243640363",
+            appId: "1:689243640363:web:7d61bc567ce75ecaff106e"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        let currentUser = null;
+
+        window.toggleAuthMode = function() {
+            const lg = document.getElementById('login-form');
+            const rg = document.getElementById('register-form');
+            if (lg.classList.contains('translate-x-0')) {
+                // To Register: slide login out to left, slide register in from right
+                lg.classList.remove('translate-x-0');
+                lg.classList.add('translate-x-[-100%]', 'opacity-0', 'pointer-events-none');
+                rg.classList.remove('translate-x-full', 'opacity-0', 'pointer-events-none');
+                rg.classList.add('translate-x-0');
+                rg.classList.remove('opacity-0', 'pointer-events-none');
+            } else {
+                // To Login: slide login back in from left, slide register out to right
+                lg.classList.remove('translate-x-[-100%]', 'opacity-0', 'pointer-events-none');
+                lg.classList.add('translate-x-0');
+                rg.classList.add('translate-x-full', 'opacity-0', 'pointer-events-none');
+                rg.classList.remove('translate-x-0');
+            }
+            lucide.createIcons();
+        };
+
+        function setAuthLoading(formId, isLoading) {
+            const btn = document.querySelector(`#${formId} button[type="submit"]`);
+            if (isLoading) {
+                btn.dataset.original = btn.innerHTML;
+                btn.innerHTML = '<i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i> Processing...';
+                btn.disabled = true;
+                lucide.createIcons();
+            } else {
+                if (btn.dataset.original) btn.innerHTML = btn.dataset.original;
+                btn.disabled = false;
+                lucide.createIcons();
+            }
+        }
+
+        document.getElementById('register-form')?.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const u = document.getElementById('reg-username').value.trim();
+            const p = document.getElementById('reg-password').value;
+            const err = document.getElementById('reg-error');
+            const fakeEmail = u + "@ojt-timekeeper.local";
+            setAuthLoading('register-form', true);
+            auth.createUserWithEmailAndPassword(fakeEmail, p)
+            .then(() => {
+                err.classList.add('hidden');
+                setAuthLoading('register-form', false);
+            })
+            .catch((error) => {
+                err.textContent = error.message;
+                err.classList.remove('hidden');
+                setAuthLoading('register-form', false);
+            });
+        });
+
+        document.getElementById('login-form')?.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const u = document.getElementById('login-username').value.trim();
+            const p = document.getElementById('login-password').value;
+            const err = document.getElementById('login-error');
+            const fakeEmail = u + "@ojt-timekeeper.local";
+            setAuthLoading('login-form', true);
+            auth.signInWithEmailAndPassword(fakeEmail, p)
+            .then(() => {
+                err.classList.add('hidden');
+                setAuthLoading('login-form', false);
+            })
+            .catch((error) => {
+                err.textContent = "Invalid username or password";
+                err.classList.remove('hidden');
+                setAuthLoading('login-form', false);
+            });
+        });
+
+        function syncToCloud(payload) {
+            if (!currentUser) return;
+            db.collection('users').doc(currentUser.uid).set(payload, { merge: true })
+            .catch(e => console.error("Sync Error", e));
+        }
+
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                currentUser = user;
+                const overlay = document.getElementById('auth-overlay');
+                if (overlay) {
+                    overlay.style.opacity = '0';
+                    setTimeout(() => {
+                        overlay.style.display = 'none';
+                        document.getElementById('app-wrapper').classList.remove('hidden');
+                        void document.getElementById('app-wrapper').offsetWidth;
+                        document.getElementById('app-wrapper').classList.remove('opacity-0');
+                        db.collection('users').doc(user.uid).get().then(doc => {
+                            if (doc.exists) {
+                                const data = doc.data();
+                                if (data.logs) localStorage.setItem('ojt_logs', JSON.stringify(data.logs));
+                                if (data.userName) localStorage.setItem('ojt_user_name', data.userName);
+                                if (data.userProgram) localStorage.setItem('ojt_user_program', data.userProgram);
+                                if (data.userSection) localStorage.setItem('ojt_user_section', data.userSection);
+                                if (data.overtimeStatusObj) localStorage.setItem('ojt_overtime_status', JSON.stringify(data.overtimeStatusObj));
+                            }
+                            if (typeof initApp === 'function') initApp();
+                        }).catch(() => {
+                            if (typeof initApp === 'function') initApp();
+                        });
+                    }, 700);
+                }
+            } else {
+                currentUser = null;
+                const wrap = document.getElementById('app-wrapper');
+                if (wrap) wrap.classList.add('opacity-0');
+                setTimeout(() => {
+                    if (wrap) wrap.classList.add('hidden');
+                    const ol = document.getElementById('auth-overlay');
+                    if (ol) ol.style.display = 'flex';
+                    void ol?.offsetWidth;
+                    if (ol) ol.style.opacity = '1';
+                }, 700);
+            }
+        });
+
+        document.getElementById('logout-btn')?.addEventListener('click', () => {
+            auth.signOut().then(() => location.reload());
+        });
+
         // Constants (from React App.tsx)
         const TARGET_HOURS = 486;
         const START_DATE = new Date('2026-01-20');
