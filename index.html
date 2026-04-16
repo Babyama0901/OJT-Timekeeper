@@ -580,6 +580,13 @@
                                         </div>
                                     </div>
                                 </div>
+
+                                <!-- Start Break Button (Restored) -->
+                                <button type="button" id="start-break-btn" onclick="startBreakTimer()"
+                                    class="mt-6 w-full hidden opacity-0 translate-y-2 transition-all duration-500 bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 font-black py-3 rounded-2xl border border-amber-500/20 flex items-center justify-center gap-2 group/break">
+                                    <i data-lucide="coffee" class="w-4 h-4 transition-transform group-hover/break:rotate-12"></i>
+                                    <span class="text-[10px] font-black uppercase tracking-[0.2em]">Start Break (1 Hour)</span>
+                                </button>
                             </div>
 
                             <!-- Afternoon Session Group -->
@@ -1752,7 +1759,21 @@
             const pmIn  = document.getElementById('pm-in')?.value;
             const timeEl = document.getElementById('expected-logout-time');
             const noteEl = document.getElementById('expected-logout-note');
+            const startBreakBtn = document.getElementById('start-break-btn');
+            
             if (!timeEl) return;
+
+            // Handle Start Break button visibility
+            if (amIn && amOut) {
+                if (startBreakBtn) {
+                    startBreakBtn.classList.remove('hidden');
+                    setTimeout(() => startBreakBtn.classList.remove('opacity-0', 'translate-y-2'), 10);
+                }
+            } else {
+                if (startBreakBtn) {
+                    startBreakBtn.classList.add('hidden', 'opacity-0', 'translate-y-2');
+                }
+            }
 
             if (!amIn || !amOut || !pmIn) {
                 timeEl.textContent = '—';
