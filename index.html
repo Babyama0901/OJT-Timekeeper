@@ -549,19 +549,7 @@
                                             class="absolute left-4 top-1/2 -translate-y-1/2 text-cyan-400/50 w-5 h-5 pointer-events-none"></i>
                                         <input type="time" id="am-in"
                                             class="w-full bg-white/5 border border-white/10 rounded-2xl pl-12 pr-14 py-3.5 focus:outline-none focus:ring-2 focus:ring-cyan-500/40 focus:border-cyan-500/50 transition-all text-stone-50 font-bold text-base tracking-widest [color-scheme:dark]"
-                                            oninput="checkLockVisibility('am-in'); computeExpectedLogout(); renderCalendar()" required />
-                                        <button type="button" onclick="setFieldToNow('am-in')"
-                                            class="absolute right-2 top-1/2 -translate-y-1/2 hover:scale-105 active:scale-95 transition-all"
-                                            title="Set to current time">
-                                            <span
-                                                class="flex items-center justify-center bg-stone-50 text-stone-950 font-black text-[10px] tracking-widest rounded-lg px-2 py-1 shadow-md">AUTO</span>
-                                        </button>
-                                    </div>
-                                    <button type="button" id="lock-am-in" onclick="lockField('am-in')"
-                                        class="hidden mt-2 w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-xs font-black uppercase tracking-widest hover:bg-cyan-500/20 transition-all">
-                                        <i data-lucide="lock" class="w-3.5 h-3.5"></i>
-                                        Lock In
-                                    </button>
+                                            oninput="computeExpectedLogout(); renderCalendar()" required />
                                 </div>
                                 <div>
                                     <label class="data-grid-header block mb-2">AM Out</label>
@@ -570,19 +558,7 @@
                                             class="absolute left-4 top-1/2 -translate-y-1/2 text-cyan-400/50 w-5 h-5 pointer-events-none"></i>
                                         <input type="time" id="am-out"
                                             class="w-full bg-white/5 border border-white/10 rounded-2xl pl-12 pr-14 py-3.5 focus:outline-none focus:ring-2 focus:ring-cyan-500/40 focus:border-cyan-500/50 transition-all text-stone-50 font-bold text-base tracking-widest [color-scheme:dark]"
-                                            oninput="checkLockVisibility('am-out'); computeExpectedLogout()" required />
-                                        <button type="button" onclick="setFieldToNow('am-out')"
-                                            class="absolute right-2 top-1/2 -translate-y-1/2 hover:scale-105 active:scale-95 transition-all"
-                                            title="Set to current time">
-                                            <span
-                                                class="flex items-center justify-center bg-stone-50 text-stone-950 font-black text-[10px] tracking-widest rounded-lg px-2 py-1 shadow-md">AUTO</span>
-                                        </button>
-                                    </div>
-                                    <button type="button" id="lock-am-out" onclick="lockField('am-out')"
-                                        class="hidden mt-2 w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-xs font-black uppercase tracking-widest hover:bg-cyan-500/20 transition-all">
-                                        <i data-lucide="lock" class="w-3.5 h-3.5"></i>
-                                        Lock In
-                                    </button>
+                                            oninput="computeExpectedLogout()" required />
                                 </div>
                             </div>
 
@@ -594,19 +570,7 @@
                                             class="absolute left-4 top-1/2 -translate-y-1/2 text-cyan-400/50 w-5 h-5 pointer-events-none"></i>
                                         <input type="time" id="pm-in"
                                             class="w-full bg-white/5 border border-white/10 rounded-2xl pl-12 pr-14 py-3.5 focus:outline-none focus:ring-2 focus:ring-cyan-500/40 focus:border-cyan-500/50 transition-all text-stone-50 font-bold text-base tracking-widest [color-scheme:dark]"
-                                            oninput="checkLockVisibility('pm-in'); computeExpectedLogout()" required />
-                                        <button type="button" onclick="setFieldToNow('pm-in')"
-                                            class="absolute right-2 top-1/2 -translate-y-1/2 hover:scale-105 active:scale-95 transition-all"
-                                            title="Set to current time">
-                                            <span
-                                                class="flex items-center justify-center bg-stone-50 text-stone-950 font-black text-[10px] tracking-widest rounded-lg px-2 py-1 shadow-md">AUTO</span>
-                                        </button>
-                                    </div>
-                                    <button type="button" id="lock-pm-in" onclick="lockField('pm-in')"
-                                        class="hidden mt-2 w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-xs font-black uppercase tracking-widest hover:bg-cyan-500/20 transition-all">
-                                        <i data-lucide="lock" class="w-3.5 h-3.5"></i>
-                                        Lock In
-                                    </button>
+                                            oninput="computeExpectedLogout()" required />
                                 </div>
                                 <div id="pm-out-container" class="transition-all">
                                     <label class="data-grid-header block mb-2">PM Out</label>
@@ -615,19 +579,7 @@
                                             class="absolute left-4 top-1/2 -translate-y-1/2 text-cyan-400/50 w-5 h-5 pointer-events-none"></i>
                                         <input type="time" id="pm-out"
                                             class="w-full bg-white/5 border border-white/10 rounded-2xl pl-12 pr-14 py-3.5 focus:outline-none focus:ring-2 focus:ring-cyan-500/40 focus:border-cyan-500/50 transition-all text-stone-50 font-bold text-base tracking-widest [color-scheme:dark]"
-                                            oninput="checkLockVisibility('pm-out')" required />
-                                        <button type="button" onclick="setFieldToNow('pm-out')"
-                                            class="absolute right-2 top-1/2 -translate-y-1/2 hover:scale-105 active:scale-95 transition-all"
-                                            title="Set to current time">
-                                            <span
-                                                class="flex items-center justify-center bg-stone-50 text-stone-950 font-black text-[10px] tracking-widest rounded-lg px-2 py-1 shadow-md">AUTO</span>
-                                        </button>
-                                    </div>
-                                    <button type="button" id="lock-pm-out" onclick="lockField('pm-out')"
-                                        class="hidden mt-2 w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-xs font-black uppercase tracking-widest hover:bg-cyan-500/20 transition-all">
-                                        <i data-lucide="lock" class="w-3.5 h-3.5"></i>
-                                        Lock In
-                                    </button>
+                                            oninput="" required />
                                 </div>
                             </div>
 
@@ -1752,20 +1704,11 @@
                 earlyOut.dispatchEvent(new Event('change'));
             }
 
-            // Unlock any locked fields
-            if (typeof unlockAllFields === 'function') unlockAllFields();
-
             // Clear expected logout display
             const timeEl = document.getElementById('expected-logout-time');
             const noteEl = document.getElementById('expected-logout-note');
             if (timeEl) timeEl.textContent = '—';
             if (noteEl) noteEl.textContent = '';
-
-            // Hide lock buttons (values are now empty)
-            ['am-in', 'am-out', 'pm-in', 'pm-out'].forEach(id => {
-                const lockBtn = document.getElementById(`lock-${id}`);
-                if (lockBtn) lockBtn.classList.add('hidden');
-            });
 
             lucide.createIcons();
         }
@@ -1804,104 +1747,6 @@
             const ampm = outH >= 12 ? 'PM' : 'AM';
             timeEl.textContent = `${String(outH12).padStart(2,'0')}:${String(outM).padStart(2,'0')} ${ampm}`;
             if (noteEl) noteEl.textContent = `${remainingHours.toFixed(2)}h PM session`;
-        }
-
-        // --- Lock-In Field System ---
-        const LOCK_FIELDS = ['am-in', 'am-out', 'pm-in', 'pm-out'];
-
-        function getLockKey(fieldId) {
-            const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Manila' });
-            return `ojt_lock_${fieldId}_${todayStr}`; // User namespace handled by firebase auth layer isolation
-        }
-
-        // Show/hide the Lock-In button based on whether the field has a value
-        window.checkLockVisibility = function (fieldId) {
-            const field = document.getElementById(fieldId);
-            const lockBtn = document.getElementById(`lock-${fieldId}`);
-            if (!field || !lockBtn) return;
-            if (field.value && !field.disabled) {
-                lockBtn.classList.remove('hidden');
-            } else if (!field.disabled) {
-                lockBtn.classList.add('hidden');
-            }
-        }
-
-        // Lock a field: persist value to localStorage, disable input, update button
-        window.lockField = function (fieldId) {
-            const field = document.getElementById(fieldId);
-            const lockBtn = document.getElementById(`lock-${fieldId}`);
-            if (!field || !lockBtn || !field.value) return;
-
-            const isLocked = field.disabled;
-
-            if (isLocked) {
-                // Unlock it
-                localStorage.removeItem(getLockKey(fieldId));
-                field.disabled = false;
-                field.classList.remove('opacity-60', 'cursor-not-allowed', 'bg-cyan-500/5', 'border-cyan-500/30');
-                lockBtn.innerHTML = `<i data-lucide="lock" class="w-3.5 h-3.5"></i> Lock In`;
-                lockBtn.classList.remove('bg-cyan-500/20', 'border-cyan-400/40', 'text-cyan-300');
-                lockBtn.classList.add('bg-cyan-500/10', 'border-cyan-500/20', 'text-cyan-400');
-                lucide.createIcons();
-            } else {
-                // Lock it
-                localStorage.setItem(getLockKey(fieldId), field.value);
-                field.disabled = true;
-                field.classList.add('opacity-60', 'cursor-not-allowed', 'bg-cyan-500/5', 'border-cyan-500/30');
-                lockBtn.innerHTML = `<i data-lucide="lock-open" class="w-3.5 h-3.5"></i> Locked – Tap to Unlock`;
-                lockBtn.classList.add('bg-cyan-500/20', 'border-cyan-400/40', 'text-cyan-300');
-                lockBtn.classList.remove('bg-cyan-500/10', 'border-cyan-500/20', 'text-cyan-400');
-                lockBtn.classList.remove('hidden');
-                lucide.createIcons();
-                
-                // Show Break Screen Saver whenever any field is locked
-                startBreakTimer();
-
-                // Refresh calendar to reflect punch-in state
-                if(typeof renderCalendar === 'function') renderCalendar();
-            }
-        }
-
-        // Clear all locks (called on form Reset)
-        window.unlockAllFields = function () {
-            LOCK_FIELDS.forEach(fieldId => {
-                localStorage.removeItem(getLockKey(fieldId));
-                const field = document.getElementById(fieldId);
-                const lockBtn = document.getElementById(`lock-${fieldId}`);
-                if (field) {
-                    field.disabled = false;
-                    field.classList.remove('opacity-60', 'cursor-not-allowed', 'bg-cyan-500/5', 'border-cyan-500/30');
-                }
-                if (lockBtn) {
-                    lockBtn.innerHTML = `<i data-lucide="lock" class="w-3.5 h-3.5"></i> Lock In`;
-                    lockBtn.classList.remove('bg-cyan-500/20', 'border-cyan-400/40', 'text-cyan-300');
-                    lockBtn.classList.add('bg-cyan-500/10', 'border-cyan-500/20', 'text-cyan-400');
-                    lockBtn.classList.add('hidden');
-                }
-            });
-            lucide.createIcons();
-        }
-
-        // Restore locked fields from localStorage on page load
-        function restoreLockedFields() {
-            LOCK_FIELDS.forEach(fieldId => {
-                const saved = localStorage.getItem(getLockKey(fieldId));
-                if (saved) {
-                    const field = document.getElementById(fieldId);
-                    const lockBtn = document.getElementById(`lock-${fieldId}`);
-                    if (field) {
-                        field.value = saved;
-                        field.disabled = true;
-                        field.classList.add('opacity-60', 'cursor-not-allowed', 'bg-cyan-500/5', 'border-cyan-500/30');
-                    }
-                    if (lockBtn) {
-                        lockBtn.innerHTML = `<i data-lucide="lock-open" class="w-3.5 h-3.5"></i> Locked – Tap to Unlock`;
-                        lockBtn.classList.add('bg-cyan-500/20', 'border-cyan-400/40', 'text-cyan-300');
-                        lockBtn.classList.remove('bg-cyan-500/10', 'border-cyan-500/20', 'text-cyan-400', 'hidden');
-                    }
-                }
-            });
-            lucide.createIcons();
         }
 
         // Utility: Calculate decimal hours
@@ -1965,20 +1810,14 @@
                 logs.sort((a,b) => b.date.localeCompare(a.date));
             }
 
-            // Set default form date to today
+            // Set dynamic form and logout help
             const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Manila' }); // YYYY-MM-DD in PHT
             document.getElementById('log-date').value = todayStr;
 
-            // Set defaults only for fields that are NOT locked
             const defaults = { 'am-in': '07:00', 'am-out': '12:00', 'pm-in': '13:00', 'pm-out': '16:00' };
-            LOCK_FIELDS.forEach(fieldId => {
-                if (!localStorage.getItem(getLockKey(fieldId))) {
-                    document.getElementById(fieldId).value = defaults[fieldId];
-                }
+            Object.keys(defaults).forEach(fieldId => {
+                document.getElementById(fieldId).value = defaults[fieldId];
             });
-
-            // Restore any locked fields from today
-            restoreLockedFields();
 
             // Update expected logout display
             computeExpectedLogout();
@@ -2172,8 +2011,7 @@
             // Trigger early out logic visually
             document.getElementById('early-out').dispatchEvent(new Event('change'));
 
-            // AUTOMATIC RESET: Clear all locks and set to default for the next log
-            if (typeof unlockAllFields === 'function') unlockAllFields();
+            // Reset to defaults for the next log
             const defaults = { 'am-in': '07:00', 'am-out': '12:00', 'pm-in': '13:00', 'pm-out': '16:00' };
             ['am-in', 'am-out', 'pm-in', 'pm-out'].forEach(fieldId => {
                 const el = document.getElementById(fieldId);
