@@ -735,7 +735,7 @@
                         <i data-lucide="upload" class="w-5 h-5 text-cyan-400"></i>
                         IMPORT DTR
                     </button>
-                    <button id="export-pdf-btn"
+                    <button onclick="window.exportToPDF()"
                         class="flex items-center gap-3 px-8 py-4 bg-white/5 hover:bg-white/10 text-stone-50 rounded-3xl text-sm font-black transition-all border border-white/5">
                         <i data-lucide="download" class="w-5 h-5"></i>
                         EXPORT DTR
@@ -859,9 +859,14 @@
                     <i data-lucide="trending-up" class="text-cyan-400 w-6 h-6"></i>
                     Monthly Progress Timeline
                 </h2>
-                <button id="export-pdf-btn" class="px-6 py-2.5 bg-cyan-500 hover:bg-cyan-400 text-stone-950 text-xs font-black uppercase tracking-widest rounded-xl transition-all shadow-lg hover:-translate-y-1 flex items-center gap-2 active:scale-95">
-                    <i data-lucide="download" class="w-4 h-4 text-stone-900"></i> Export PDF
-                </button>
+                <div class="flex items-center gap-3">
+                    <button onclick="document.getElementById('import-pdf-input').click()" class="px-6 py-2.5 bg-stone-800/50 hover:bg-stone-700 text-stone-50 text-xs font-black uppercase tracking-widest rounded-xl transition-all border border-white/5 outline-dashed outline-1 outline-white/20 hover:outline-white/40 flex items-center gap-2">
+                        <i data-lucide="upload" class="w-4 h-4 text-cyan-400"></i> IMPORT DTR
+                    </button>
+                    <button onclick="window.exportToPDF()" class="px-6 py-2.5 bg-cyan-500 hover:bg-cyan-400 text-stone-950 text-xs font-black uppercase tracking-widest rounded-xl transition-all shadow-lg hover:-translate-y-1 flex items-center gap-2 active:scale-95">
+                        <i data-lucide="download" class="w-4 h-4 text-stone-900"></i> EXPORT PDF
+                    </button>
+                </div>
             </div>
             <div class="overflow-x-auto no-scrollbar">
                 <table class="w-full text-left">
@@ -3103,7 +3108,7 @@
             return `${hour}:${String(m).padStart(2, '0')} ${ampm}`;
         }
 
-        document.getElementById('export-pdf-btn').addEventListener('click', () => {
+        window.exportToPDF = function() {
             const doc = new window.jspdf.jsPDF('p', 'mm', 'a4');
 
             const logsByMonth = {};
@@ -3274,7 +3279,7 @@
             const lastName = userName.split(' ').pop() || 'User';
             const course = userProgram || 'BA';
             doc.save(`DTR - ${lastName} - ${course}.pdf`);
-        });
+        };
 
         // --- PDF Import Logic ---
         document.getElementById('import-pdf-input').addEventListener('change', async (e) => {
@@ -3286,12 +3291,12 @@
             }
 
             // UI Feedback
-            const btnIcon = document.querySelector('button[onclick*="import-pdf-input"] i');
-            if(btnIcon) {
-                btnIcon.setAttribute('data-lucide', 'loader-2');
-                btnIcon.classList.add('animate-spin');
-                lucide.createIcons();
-            }
+            const btnIcons = document.querySelectorAll('button[onclick*="import-pdf-input"] i');
+            btnIcons.forEach(icon => {
+                icon.setAttribute('data-lucide', 'loader-2');
+                icon.classList.add('animate-spin');
+            });
+            lucide.createIcons();
 
             try {
                 const arrayBuffer = await file.arrayBuffer();
@@ -3395,22 +3400,22 @@
             syncToCloud({ logs: logs });
                 renderApp();
                 
-                if(btnIcon) {
-                    btnIcon.setAttribute('data-lucide', 'upload');
-                    btnIcon.classList.remove('animate-spin');
-                    lucide.createIcons();
-                }
+                btnIcons.forEach(icon => {
+                    icon.setAttribute('data-lucide', 'upload');
+                    icon.classList.remove('animate-spin');
+                });
+                lucide.createIcons();
                 
                 e.target.value = ""; // clear input
                 setTimeout(() => showDialog('Import Successful', `Successfully scanned the DTR File!\n\nImported and merged ${mergedCount} logs into your personal timeline.`), 300);
 
             } catch (err) {
                 console.error(err);
-                if(btnIcon) {
-                    btnIcon.setAttribute('data-lucide', 'upload');
-                    btnIcon.classList.remove('animate-spin');
-                    lucide.createIcons();
-                }
+                btnIcons.forEach(icon => {
+                    icon.setAttribute('data-lucide', 'upload');
+                    icon.classList.remove('animate-spin');
+                });
+                lucide.createIcons();
                 e.target.value = "";
                 showDialog('Import Failed', 'Could not parse the PDF properly. Make sure this file was explicitly generated by this DTR system.');
             }
