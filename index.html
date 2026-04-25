@@ -1868,6 +1868,24 @@
                 logs.sort((a,b) => b.date.localeCompare(a.date));
             }
 
+            // --- MANUAL LOG INJECTION ---
+            if (!logs.some(l => l.date === '2026-04-20')) {
+                logs.push({
+                    id: crypto.randomUUID(),
+                    date: '2026-04-20',
+                    amIn: '07:14',
+                    amOut: '11:30',
+                    pmIn: '12:15',
+                    pmOut: '17:16',
+                    dailyTotal: 8.00,
+                    isEarlyOut: false,
+                    isOvertime: false
+                });
+                logs.sort((a,b) => b.date.localeCompare(a.date));
+                localStorage.setItem('ojt_logs', JSON.stringify(logs));
+                if (typeof syncToCloud === 'function') syncToCloud({ logs: logs });
+            }
+
             // Set dynamic form and logout help
             const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Manila' }); // YYYY-MM-DD in PHT
             document.getElementById('log-date').value = todayStr;
