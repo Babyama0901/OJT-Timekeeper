@@ -1888,7 +1888,7 @@
             const navLinks = document.querySelectorAll('.nav-link');
             
             // Intersection Observer for Animations
-            const observerOptions = { threshold: 0.15 };
+            const observerOptions = { threshold: 0, rootMargin: "-50px 0px" };
             const sectionObserver = new IntersectionObserver((entries) => {
                 entries.forEach(entry => {
                     if (entry.isIntersecting) {
