@@ -518,6 +518,10 @@
                                         <div class="w-2 h-2 rounded-full bg-purple-500/70"></div>
                                         <span class="text-[9px] font-bold text-stone-600 uppercase tracking-widest">Overtime</span>
                                     </div>
+                                    <div class="flex items-center gap-1.5">
+                                        <div class="w-2 h-2 rounded-full bg-cyan-400/70 shadow-[0_0_8px_rgba(34,211,238,0.5)]"></div>
+                                        <span class="text-[9px] font-bold text-stone-600 uppercase tracking-widest">Work From Home</span>
+                                    </div>
                                 </div>
                             </div>
 
@@ -2394,7 +2398,9 @@
             logs.forEach(log => {
                 if (!log.amIn) return;
                 
-                if (log.isOvertime) {
+                if (log.isWFH) {
+                    statusMap[log.date] = 'wfh';
+                } else if (log.isOvertime) {
                     statusMap[log.date] = 'overtime';
                 } else {
                     statusMap[log.date] = log.amIn <= '07:00' ? 'present' : 'late';
@@ -2444,7 +2450,10 @@
                 // Determine colour class
                 let cls = 'flex items-center justify-center rounded-xl text-[11px] font-black aspect-square transition-all cursor-default select-none ';
 
-                if (status === 'overtime') {
+                if (status === 'wfh') {
+                    cls += 'bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 shadow-[0_0_15px_rgba(34,211,238,0.15)]';
+                    cell.title = `${dateStr} — Work From Home`;
+                } else if (status === 'overtime') {
                     cls += 'bg-purple-500/20 border border-purple-500/40 text-purple-300 shadow-[0_0_15px_rgba(168,85,247,0.15)]';
                     cell.title = `${dateStr} — Overtime`;
                 } else if (status === 'present') {
@@ -2476,10 +2485,16 @@
 
                 cls += ' cursor-pointer hover:scale-110 active:scale-95 z-10 hover:z-20';
                 cell.className = cls;
-                cell.textContent = d;
+                cell.innerHTML = `
+                    <div class="flex flex-col items-center gap-0.5">
+                        <span>${d}</span>
+                        ${status === 'wfh' ? '<i data-lucide="home" class="w-2.5 h-2.5"></i>' : ''}
+                    </div>
+                `;
                 cell.onclick = () => showCalendarSessionDetails(dateStr);
                 grid.appendChild(cell);
             }
+            lucide.createIcons();
         }
 
         // --- Chart Logic ---
@@ -2619,8 +2634,11 @@
 
             logs.forEach(log => {
                 if (!log.amIn) return;
-                // Present: AM In at or before 07:00 (6:00–7:00 window)
-                if (log.amIn <= '07:00') {
+                // WFH: Always present
+                if (log.isWFH) {
+                    present++;
+                } else if (log.amIn <= '07:00') {
+                    // Present: AM In at or before 07:00 (6:00–7:00 window)
                     present++;
                 } else {
                     // Late: AM In after 07:00 (7:01 and above)
