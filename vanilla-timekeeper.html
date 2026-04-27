@@ -601,12 +601,24 @@
                                         <span
                                             class="text-sm font-black text-stone-400 group-hover:text-cyan-400 transition-colors uppercase tracking-[0.2em]">Early Out</span>
                                     </label>
+                                <!-- Work From Home Switch -->
+                                <div class="flex-1 flex items-center gap-4 p-6 bg-white/5 rounded-3xl border border-white/5">
+                                    <label class="flex items-center gap-4 cursor-pointer group w-full">
+                                        <div class="relative flex items-center">
+                                            <input type="checkbox" id="wfh-mode"
+                                                class="peer appearance-none w-7 h-7 border-2 border-white/10 rounded-xl checked:bg-cyan-500 checked:border-cyan-500 transition-all cursor-pointer" />
+                                            <i data-lucide="home"
+                                                class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-stone-950 w-4 h-4 opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none"></i>
+                                        </div>
+                                        <span
+                                            class="text-sm font-black text-stone-400 group-hover:text-cyan-400 transition-colors uppercase tracking-[0.2em]">WFH Mode</span>
+                                    </label>
                                 </div>
                                 <!-- Reset Button -->
                                 <button type="button" onclick="resetTimesForm()"
                                     id="reset-times-btn"
                                     title="Clear all login & logout times"
-                                    class="flex-1 flex items-center justify-center gap-2 p-6 bg-white/5 hover:bg-red-500/10 border border-white/5 hover:border-red-500/30 text-stone-500 hover:text-red-400 rounded-3xl transition-all duration-200 group">
+                                    class="flex items-center justify-center gap-2 px-6 py-6 bg-white/5 hover:bg-red-500/10 border border-white/5 hover:border-red-500/30 text-stone-500 hover:text-red-400 rounded-3xl transition-all duration-200 group w-32 shrink-0">
                                     <i data-lucide="rotate-ccw" class="w-4 h-4 transition-transform duration-300 group-hover:-rotate-45"></i>
                                     <span class="text-sm font-black uppercase tracking-[0.2em]">Reset</span>
                                 </button>
@@ -1844,6 +1856,44 @@
             }
         });
 
+        // WFH Mode Checkbox
+        document.getElementById('wfh-mode').addEventListener('change', (e) => {
+            const isWFH = e.target.checked;
+            const inputs = ['am-in', 'am-out', 'pm-in', 'pm-out'];
+            const defaults = { 'am-in': '08:00', 'am-out': '12:00', 'pm-in': '13:00', 'pm-out': '17:00' };
+
+            if (isWFH) {
+                inputs.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) {
+                        el.value = defaults[id];
+                        el.disabled = true;
+                        el.parentElement.classList.add('opacity-50', 'pointer-events-none');
+                    }
+                });
+                // Disable Early Out if WFH is ON (optional, but makes sense for standard WFH shift)
+                const earlyOut = document.getElementById('early-out');
+                if (earlyOut) {
+                    earlyOut.checked = false;
+                    earlyOut.disabled = true;
+                    earlyOut.parentElement.parentElement.classList.add('opacity-20', 'pointer-events-none');
+                }
+            } else {
+                inputs.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) {
+                        el.disabled = false;
+                        el.parentElement.classList.remove('opacity-50', 'pointer-events-none');
+                    }
+                });
+                const earlyOut = document.getElementById('early-out');
+                if (earlyOut) {
+                    earlyOut.disabled = false;
+                    earlyOut.parentElement.parentElement.classList.remove('opacity-20', 'pointer-events-none');
+                }
+            }
+        });
+
         // Form Submit
         document.getElementById('log-form').addEventListener('submit', (e) => {
             e.preventDefault();
@@ -1854,42 +1904,43 @@
             const pmIn = document.getElementById('pm-in').value;
             const pmOut = document.getElementById('pm-out').value;
             const isEarlyOut = document.getElementById('early-out').checked;
+            const isWFH = document.getElementById('wfh-mode').checked;
 
             if (logs.some(log => log.date === date)) {
                 showDialog('Duplicate Entry', 'A log for this date already exists. Edit it from the History section instead.');
                 return;
             }
 
-            const effectiveAmIn = isEarlyOut ? amIn : (amIn < '07:00' ? '07:00' : amIn);
+            const effectiveAmIn = (isEarlyOut || isWFH) ? amIn : (amIn < '07:00' ? '07:00' : amIn);
             const am = calculateHours(effectiveAmIn, amOut);
-            const pm = isEarlyOut ? 0 : calculateHours(pmIn, pmOut);
+            const pm = (isEarlyOut && !isWFH) ? 0 : calculateHours(pmIn, pmOut);
             
             const todayStrTz = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Manila' });
 
-            if (!isEarlyOut && (am + pm) >= 9) {
+            if (!isEarlyOut && !isWFH && (am + pm) >= 9) {
                 if (date === todayStrTz && overtimeStatusObj.date === todayStrTz && overtimeStatusObj.confirmed !== null) {
-                    processLogSubmission(date, amIn, amOut, pmIn, pmOut, isEarlyOut, overtimeStatusObj.confirmed);
+                    processLogSubmission(date, amIn, amOut, pmIn, pmOut, isEarlyOut, overtimeStatusObj.confirmed, isWFH);
                 } else {
                     showOvertimePromptDialog((didConfirm) => {
                         if (date === todayStrTz) {
                             window.confirmOvertime(didConfirm);
                         }
-                        processLogSubmission(date, amIn, amOut, pmIn, pmOut, isEarlyOut, didConfirm);
+                        processLogSubmission(date, amIn, amOut, pmIn, pmOut, isEarlyOut, didConfirm, isWFH);
                     });
                 }
             } else {
-                processLogSubmission(date, amIn, amOut, pmIn, pmOut, isEarlyOut, false);
+                processLogSubmission(date, amIn, amOut, pmIn, pmOut, isEarlyOut, false, isWFH);
             }
         });
 
-        function processLogSubmission(date, amIn, amOut, pmIn, pmOut, isEarlyOut, isOvertime) {
-            const effectiveAmIn = isEarlyOut ? amIn : (amIn < '07:00' ? '07:00' : amIn);
+        function processLogSubmission(date, amIn, amOut, pmIn, pmOut, isEarlyOut, isOvertime, isWFH) {
+            const effectiveAmIn = (isEarlyOut || isWFH) ? amIn : (amIn < '07:00' ? '07:00' : amIn);
             const am = calculateHours(effectiveAmIn, amOut);
-            const pm = isEarlyOut ? 0 : calculateHours(pmIn, pmOut);
+            const pm = (isEarlyOut && !isWFH) ? 0 : calculateHours(pmIn, pmOut);
 
             let finalIsOvertime = isOvertime;
             let dailyTotal = Math.min(8, am + pm);
-            if (isEarlyOut) {
+            if (isEarlyOut && !isWFH) {
                 dailyTotal = am;
                 finalIsOvertime = false;
             } else if (finalIsOvertime && (am + pm) >= 9) {
@@ -1903,10 +1954,11 @@
                 date,
                 amIn,
                 amOut,
-                pmIn: isEarlyOut ? '' : pmIn,
-                pmOut: isEarlyOut ? '' : pmOut,
+                pmIn: (isEarlyOut && !isWFH) ? '' : pmIn,
+                pmOut: (isEarlyOut && !isWFH) ? '' : pmOut,
                 dailyTotal,
                 isEarlyOut,
+                isWFH,
                 isOvertime: finalIsOvertime
             };
 
@@ -1916,10 +1968,11 @@
             // Save & Render
             localStorage.setItem('ojt_logs', JSON.stringify(logs));
 
-            // Reset Early Out for next entry
+            // Reset Toggles for next entry
             document.getElementById('early-out').checked = false;
-            // Trigger early out logic visually
             document.getElementById('early-out').dispatchEvent(new Event('change'));
+            document.getElementById('wfh-mode').checked = false;
+            document.getElementById('wfh-mode').dispatchEvent(new Event('change'));
 
             // AUTOMATIC RESET: Clear all locks and set to default for the next log
             if (typeof unlockAllFields === 'function') unlockAllFields();
