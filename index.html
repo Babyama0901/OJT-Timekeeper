@@ -3125,7 +3125,7 @@
                                 formatTimeForPDF(log.amOut),
                                 log.isEarlyOut ? '' : formatTimeForPDF(log.pmIn),
                                 log.isEarlyOut ? '' : formatTimeForPDF(log.pmOut),
-                                log.isOvertime ? `${Math.floor(log.dailyTotal)}\n(OT)` : (Math.floor(log.dailyTotal) || ''),
+                                log.isOvertime ? Math.floor(log.dailyTotal) : (Math.floor(log.dailyTotal) || ''),
                                 Math.round((log.dailyTotal % 1) * 60) || ''
                             ]);
                         } else {
