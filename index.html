@@ -1286,6 +1286,7 @@
         const TARGET_HOURS = 486;
         const START_DATE = new Date('2026-01-20');
         const DAILY_QUOTA = 8;
+        const RECALIBRATION_OFFSET = -3.82; // Recalibrate from 462.82 to 459
 
         const HOLIDAYS_2026 = {
             '2026-03-18': 'Panay Liberation Day',
@@ -2630,7 +2631,7 @@
 
             // Calculate core app stats if history exists
             if (logs.length > 0) {
-                totalHoursServed = allLogsTotal;
+                totalHoursServed = Math.max(0, allLogsTotal + RECALIBRATION_OFFSET);
                 remainingHours = Math.max(0, TARGET_HOURS - totalHoursServed);
                 progressPercentage = (totalHoursServed / TARGET_HOURS) * 100;
             }
@@ -2746,8 +2747,8 @@
 
                     const logsBefore = logs.slice(index + 1);
                     const historyTotalBefore = logsBefore.reduce((acc, l) => acc + l.dailyTotal, 0);
-                    const runningGrandTotal = historyTotalBefore + log.dailyTotal;
-                    const runningRemaining = TARGET_HOURS - runningGrandTotal;
+                    const runningGrandTotal = Math.max(0, historyTotalBefore + log.dailyTotal + RECALIBRATION_OFFSET);
+                    const runningRemaining = Math.max(0, TARGET_HOURS - runningGrandTotal);
 
                     // Compute raw (uncapped) actual hours — display only, never saved
                     const rawAm = calculateHours(log.amIn, log.amOut);
