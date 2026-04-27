@@ -601,6 +601,7 @@
                                         <span
                                             class="text-sm font-black text-stone-400 group-hover:text-cyan-400 transition-colors uppercase tracking-[0.2em]">Early Out</span>
                                     </label>
+                                </div>
                                 <!-- Work From Home Switch -->
                                 <div class="flex-1 flex items-center gap-4 p-6 bg-white/5 rounded-3xl border border-white/5">
                                     <label class="flex items-center gap-4 cursor-pointer group w-full">
@@ -639,27 +640,27 @@
                                 <i data-lucide="history" class="w-3.5 h-3.5 text-cyan-400"></i>
                                 Previous Statistics
                             </h3>
-                            <div class="grid grid-cols-3 gap-3">
-                                <div class="bg-stone-900/40 border border-white/5 rounded-2xl p-4 flex flex-col gap-1 hover:bg-stone-800/40 transition-colors">
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                <div class="bg-stone-900/40 border border-white/5 rounded-2xl p-4 flex flex-col gap-1 hover:bg-stone-800/40 transition-colors min-w-0">
                                     <span class="text-[9px] font-black uppercase tracking-tight text-stone-500">Logins/Outs</span>
-                                    <span class="text-[11px] lg:text-[13px] font-black text-stone-200 mt-1 whitespace-nowrap" id="prev-stat-range">--:-- &ndash; --:--</span>
+                                    <span class="text-[11px] lg:text-[13px] font-black text-stone-200 mt-1" id="prev-stat-range">--:-- &ndash; --:--</span>
                                     <span class="text-[9px] font-bold text-stone-600 tracking-widest mt-0.5 uppercase" id="prev-stat-date">—</span>
                                 </div>
-                                <div class="bg-stone-900/40 border border-white/5 rounded-2xl p-4 flex flex-col gap-1 hover:bg-stone-800/40 transition-colors justify-between">
+                                <div class="bg-stone-900/40 border border-white/5 rounded-2xl p-4 flex flex-col gap-1 hover:bg-stone-800/40 transition-colors justify-between min-w-0">
                                     <span class="text-[9px] font-black uppercase tracking-tight text-stone-500">Breaktime</span>
                                     <div class="flex items-baseline gap-1 mt-1">
                                         <span class="text-2xl font-black text-amber-400" id="prev-stat-break">0</span>
                                         <span class="text-[9px] font-bold text-amber-400/60 uppercase tracking-widest">mins</span>
                                     </div>
                                 </div>
-                                <div class="bg-stone-900/40 border border-white/5 rounded-2xl p-4 flex flex-col gap-1 hover:bg-stone-800/40 transition-colors justify-between">
+                                <div class="bg-stone-900/40 border border-white/5 rounded-2xl p-4 flex flex-col gap-1 hover:bg-stone-800/40 transition-colors justify-between min-w-0">
                                     <span class="text-[9px] font-black uppercase tracking-tight text-stone-500">Session Hrs</span>
                                     <div class="flex items-baseline gap-1 mt-1">
                                         <span class="text-2xl font-black text-emerald-400" id="prev-stat-session-hrs">0.00</span>
                                         <span class="text-[9px] font-bold text-emerald-400/60 uppercase tracking-widest">hrs</span>
                                     </div>
                                 </div>
-                                <div class="bg-stone-900/40 border border-white/5 rounded-2xl p-4 flex flex-col gap-1 col-span-3 hover:bg-stone-800/40 transition-colors">
+                                <div class="bg-stone-900/40 border border-white/5 rounded-2xl p-4 flex flex-col gap-1 col-span-1 sm:col-span-3 hover:bg-stone-800/40 transition-colors min-w-0">
                                     <div class="flex justify-between items-center w-full mb-1">
                                         <span class="text-[9px] font-black uppercase tracking-widest text-stone-500">Total Accumulated Hrs</span>
                                         <span class="text-[9px] font-black text-cyan-400 tracking-widest bg-cyan-500/10 px-2 py-1 rounded-md" id="prev-stat-progress-pct">0.0%</span>
