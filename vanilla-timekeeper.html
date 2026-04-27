@@ -1044,6 +1044,7 @@
             '2026-04-02': 'Maundy Thursday',
             '2026-04-03': 'Good Friday',
             '2026-04-09': 'Araw ng Kagitingan',
+            '2026-05-01': 'Labor Day',
         };
 
         // State
@@ -2589,7 +2590,10 @@
                         hours: weekHours,
                         cumulative: cumulativeHours
                     });
-                    current.setDate(current.getDate() + 1);
+                    
+                    if (hoursLeft > 0) {
+                        current.setDate(current.getDate() + 1);
+                    }
                 }
 
                 completionStats = {
