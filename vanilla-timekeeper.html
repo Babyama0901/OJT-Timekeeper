@@ -692,6 +692,7 @@
                             <th class="py-4 px-8 data-grid-header">AM Session</th>
                             <th class="py-4 px-8 data-grid-header">PM Session</th>
                             <th class="py-4 px-8 data-grid-header text-right">Total</th>
+                            <th class="py-4 px-8 data-grid-header text-right">Lateness</th>
                             <th class="py-4 px-8 data-grid-header text-right">Accumulated</th>
                             <th class="py-4 px-8 data-grid-header text-center">Actions</th>
                         </tr>
@@ -759,6 +760,10 @@
             <div class="bg-stone-900/40 backdrop-blur-3xl rounded-[1.5rem] p-5 border border-white/5 shadow-xl flex flex-col justify-between group hover:bg-stone-800/40 transition-colors">
                 <span class="text-[9px] font-black uppercase tracking-widest text-stone-500 flex items-center gap-2 mb-2"><i data-lucide="x-circle" class="w-3 h-3 text-red-400"></i>Avg Absent/mo</span>
                 <span class="text-xl font-black text-stone-100" id="kpi-avg-absent">0.0</span>
+            </div>
+            <div class="bg-orange-500/10 border border-orange-500/20 backdrop-blur-3xl rounded-[1.5rem] p-5 shadow-xl flex flex-col justify-between group hover:bg-orange-500/15 transition-colors">
+                <span class="text-[9px] font-black uppercase tracking-widest text-orange-400/70 flex items-center gap-2 mb-2"><i data-lucide="alert-triangle" class="w-3 h-3 text-orange-400"></i>Total Late Hrs</span>
+                <div class="flex items-baseline gap-1"><span class="text-xl font-black text-orange-300" id="kpi-total-late">0.00</span><span class="text-[9px] font-bold text-orange-400/50 uppercase tracking-widest">hrs</span></div>
             </div>
             <div class="bg-stone-900/40 backdrop-blur-3xl rounded-[1.5rem] p-5 border border-white/5 shadow-xl flex flex-col justify-between group hover:bg-stone-800/40 transition-colors lg:col-span-1 col-span-2">
                 <span class="text-[9px] font-black uppercase tracking-widest text-stone-500 flex items-center gap-2 mb-2"><i data-lucide="alert-circle" class="w-3 h-3 text-violet-400"></i>Avg OT Hrs/mo</span>
@@ -1014,7 +1019,7 @@
         const TARGET_HOURS = 486;
         const START_DATE = new Date('2026-01-20');
         const DAILY_QUOTA = 8;
-        const RECALIBRATION_OFFSET = -3.82; // Recalibrate from 462.82 to 459
+        const RECALIBRATION_OFFSET = 0; // DTR-certified data: no offset needed
 
         const HOLIDAYS_2026 = {
             '2026-03-18': 'Panay Liberation Day',
@@ -2358,6 +2363,11 @@
             const elAvgAbsent = document.getElementById('kpi-avg-absent');
             if (elAvgLate) elAvgLate.textContent = (late / monthsWithLogs).toFixed(1);
             if (elAvgAbsent) elAvgAbsent.textContent = (absent / monthsWithLogs).toFixed(1);
+
+            // Total certified late hours from DTR (from lateMinutes field)
+            const totalLateHours = logs.reduce((acc, l) => acc + (Number(l.lateMinutes) || 0), 0);
+            const elTotalLate = document.getElementById('kpi-total-late');
+            if (elTotalLate) elTotalLate.textContent = totalLateHours.toFixed(2);
         }
 
         // Render Application
@@ -2459,7 +2469,7 @@
             if (logs.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="6" class="p-24 text-center">
+                        <td colspan="7" class="p-24 text-center">
                             <div class="flex flex-col items-center gap-6 opacity-10">
                                 <i data-lucide="history" class="w-16 h-16"></i>
                                 <p class="text-sm font-black uppercase tracking-[0.5em]">No sessions logged yet</p>
@@ -2477,7 +2487,7 @@
                         const dividerTr = document.createElement('tr');
                         dividerTr.className = "bg-black/20";
                         dividerTr.innerHTML = `
-                            <td colspan="6" class="py-4 px-8 border-y border-white/5">
+                            <td colspan="7" class="py-4 px-8 border-y border-white/5">
                                 <span class="text-[10px] font-black uppercase tracking-[0.4em] text-cyan-400/80">${currentMonth}</span>
                             </td>
                         `;
@@ -2524,11 +2534,21 @@
                             </div>`
                         }
                         ${log.isOvertime ? `<div class="mt-2 flex"><span class="px-2 py-0.5 bg-amber-500/10 text-amber-400 text-[10px] font-black uppercase tracking-widest rounded-md border border-amber-500/20 shadow-md">Overtime</span></div>` : ''}
+                        ${log.isWFH ? `<div class="mt-2 flex"><span class="px-2 py-0.5 bg-cyan-500/10 text-cyan-400 text-[10px] font-black uppercase tracking-widest rounded-md border border-cyan-500/20">WFH</span></div>` : ''}
                         </td>
                         <td class="py-4 px-8 text-right">
                             <span class="text-base font-black text-amber-400">
                                 ${log.dailyTotal.toFixed(2)}h
                             </span>
+                        </td>
+                        <td class="py-4 px-8 text-right">
+                            ${(log.lateMinutes && log.lateMinutes > 0) ?
+                            `<div class="flex flex-col items-end">
+                                <span class="text-base font-black text-orange-400">${Number(log.lateMinutes).toFixed(2)}h</span>
+                                <span class="text-[9px] font-bold text-orange-400/50 uppercase tracking-widest">late</span>
+                            </div>` :
+                            `<span class="text-stone-700 text-base font-black">—</span>`
+                            }
                         </td>
                         <td class="py-4 px-8 text-right">
                             <div class="flex flex-col items-end">
@@ -2588,7 +2608,7 @@
                     revealTr.id = revealRowId;
                     revealTr.className = 'hidden bg-violet-500/5 border-t border-violet-500/10';
                     revealTr.innerHTML = `
-                        <td colspan="6" class="px-10 py-4">
+                        <td colspan="7" class="px-10 py-4">
                             <div class="flex items-center gap-3">
                                 <i data-lucide="eye" class="w-4 h-4 text-violet-400/60"></i>
                                 <span class="text-[11px] font-black uppercase tracking-[0.3em] text-violet-400/60">Actual Hours (Display Only)</span>
