@@ -1832,60 +1832,110 @@
             if (savedSection) userSection = savedSection;
             document.getElementById('user-section-input').value = userSection;
 
-            let savedLogs = localStorage.getItem('ojt_logs');
-            if (savedLogs) {
-                logs = JSON.parse(savedLogs);
+            // ─────────────────────────────────────────────────────────────
+            // DTR SEED — Certified True Copy, Callbox Inc (Jan 20 – Apr 24 2026)
+            // Version stamp: bump this string to force a re-seed on next load.
+            const DTR_SEED_VERSION = 'callbox-dtr-v4';
+            const storedSeedVersion = localStorage.getItem('ojt_dtr_seed_version');
 
-                // Normalization step (same as React App.tsx)
-                const seenDates = new Set();
-                logs = logs
-                    .filter(log => {
-                        if (seenDates.has(log.date)) return false;
-                        seenDates.add(log.date);
-                        return true;
-                    })
-                    .map(log => {
-                        const effectiveAmIn = log.isEarlyOut ? log.amIn : (log.amIn < '07:00' ? '07:00' : log.amIn);
-                        const am = calculateHours(effectiveAmIn, log.amOut);
-                        const pm = (log.isEarlyOut || !log.pmIn || !log.pmOut) ? 0 : calculateHours(log.pmIn, log.pmOut);
-                        let isOvertime = log.isOvertime || false;
-                        let dailyTotal = Math.min(8, am + pm);
-                        if (log.isEarlyOut) {
-                            dailyTotal = am;
-                            isOvertime = false;
-                        } else if (isOvertime) {
-                            dailyTotal = 9.00;
-                        } else {
-                            isOvertime = false;
-                        }
-                        return {
-                            ...log,
-                            isOvertime,
-                            dailyTotal
-                        };
-                    });
-                
-                // Ensure logs are strictly descending by Date to guarantee Dashboard formulas, timeline projections, and KPIs execute properly.
-                logs.sort((a,b) => b.date.localeCompare(a.date));
-            }
+            const DTR_LOGS = [
+                // ── JANUARY 2026 ──────────────────────────────────────────
+                { date:'2026-01-20', amIn:'07:00', amOut:'12:00', pmIn:'13:00', pmOut:'16:00', dailyTotal:8,   isEarlyOut:false, isOvertime:false, isWFH:false, lateMinutes:0,    hasBeenEdited:false },
+                { date:'2026-01-21', amIn:'06:50', amOut:'12:00', pmIn:'13:00', pmOut:'16:01', dailyTotal:8,   isEarlyOut:false, isOvertime:false, isWFH:false, lateMinutes:0,    hasBeenEdited:false },
+                { date:'2026-01-22', amIn:'06:42', amOut:'12:00', pmIn:'13:00', pmOut:'16:01', dailyTotal:8,   isEarlyOut:false, isOvertime:false, isWFH:false, lateMinutes:0,    hasBeenEdited:false },
+                { date:'2026-01-23', amIn:'07:00', amOut:'12:00', pmIn:'13:00', pmOut:'16:00', dailyTotal:8,   isEarlyOut:false, isOvertime:false, isWFH:false, lateMinutes:0,    hasBeenEdited:false },
+                { date:'2026-01-26', amIn:'06:56', amOut:'12:00', pmIn:'13:00', pmOut:'16:03', dailyTotal:8,   isEarlyOut:false, isOvertime:false, isWFH:false, lateMinutes:0,    hasBeenEdited:false },
+                { date:'2026-01-27', amIn:'06:56', amOut:'12:00', pmIn:'13:00', pmOut:'16:02', dailyTotal:8,   isEarlyOut:false, isOvertime:false, isWFH:false, lateMinutes:0,    hasBeenEdited:false },
+                { date:'2026-01-28', amIn:'07:17', amOut:'12:00', pmIn:'13:00', pmOut:'16:20', dailyTotal:8,   isEarlyOut:false, isOvertime:false, isWFH:false, lateMinutes:0.28, hasBeenEdited:false },
+                { date:'2026-01-29', amIn:'06:41', amOut:'12:00', pmIn:'13:00', pmOut:'16:02', dailyTotal:8,   isEarlyOut:false, isOvertime:false, isWFH:false, lateMinutes:0.7,  hasBeenEdited:false },
+                { date:'2026-01-30', amIn:'06:42', amOut:'11:27', pmIn:'',      pmOut:'',      dailyTotal:4,   isEarlyOut:true,  isOvertime:false, isWFH:false, lateMinutes:0.7,  hasBeenEdited:false },
+                // ── FEBRUARY 2026 ─────────────────────────────────────────
+                { date:'2026-02-02', amIn:'06:50', amOut:'12:00', pmIn:'13:00', pmOut:'16:02', dailyTotal:8,   isEarlyOut:false, isOvertime:false, isWFH:false, lateMinutes:0,    hasBeenEdited:false },
+                { date:'2026-02-03', amIn:'06:40', amOut:'12:00', pmIn:'13:00', pmOut:'16:02', dailyTotal:8,   isEarlyOut:false, isOvertime:false, isWFH:false, lateMinutes:0.68, hasBeenEdited:false },
+                { date:'2026-02-04', amIn:'06:59', amOut:'12:00', pmIn:'13:00', pmOut:'16:00', dailyTotal:8,   isEarlyOut:false, isOvertime:false, isWFH:false, lateMinutes:1,    hasBeenEdited:false },
+                { date:'2026-02-05', amIn:'08:01', amOut:'12:00', pmIn:'13:00', pmOut:'17:01', dailyTotal:8,   isEarlyOut:false, isOvertime:false, isWFH:false, lateMinutes:2.03, hasBeenEdited:false },
+                { date:'2026-02-16', amIn:'06:46', amOut:'12:00', pmIn:'13:00', pmOut:'16:04', dailyTotal:8,   isEarlyOut:false, isOvertime:false, isWFH:false, lateMinutes:0,    hasBeenEdited:false },
+                { date:'2026-02-17', amIn:'06:42', amOut:'12:00', pmIn:'13:00', pmOut:'16:00', dailyTotal:8,   isEarlyOut:false, isOvertime:false, isWFH:false, lateMinutes:0.71, hasBeenEdited:false },
+                { date:'2026-02-18', amIn:'07:25', amOut:'12:00', pmIn:'13:00', pmOut:'16:27', dailyTotal:7,   isEarlyOut:false, isOvertime:false, isWFH:false, lateMinutes:1.42, hasBeenEdited:false },
+                { date:'2026-02-19', amIn:'07:01', amOut:'12:00', pmIn:'13:00', pmOut:'16:02', dailyTotal:8,   isEarlyOut:false, isOvertime:false, isWFH:false, lateMinutes:1.02, hasBeenEdited:false },
+                { date:'2026-02-20', amIn:'06:49', amOut:'12:00', pmIn:'13:00', pmOut:'16:01', dailyTotal:8,   isEarlyOut:false, isOvertime:false, isWFH:false, lateMinutes:0.82, hasBeenEdited:false },
+                { date:'2026-02-23', amIn:'06:46', amOut:'12:00', pmIn:'13:00', pmOut:'16:05', dailyTotal:8,   isEarlyOut:false, isOvertime:false, isWFH:false, lateMinutes:0,    hasBeenEdited:false },
+                { date:'2026-02-24', amIn:'07:01', amOut:'12:00', pmIn:'13:00', pmOut:'16:03', dailyTotal:8,   isEarlyOut:false, isOvertime:false, isWFH:false, lateMinutes:1.02, hasBeenEdited:false },
+                { date:'2026-02-25', amIn:'07:24', amOut:'12:00', pmIn:'13:00', pmOut:'16:00', dailyTotal:7,   isEarlyOut:false, isOvertime:false, isWFH:false, lateMinutes:1.4,  hasBeenEdited:false },
+                { date:'2026-02-26', amIn:'07:01', amOut:'12:00', pmIn:'13:00', pmOut:'16:05', dailyTotal:8,   isEarlyOut:false, isOvertime:false, isWFH:false, lateMinutes:1.03, hasBeenEdited:false },
+                { date:'2026-02-27', amIn:'06:52', amOut:'12:00', pmIn:'13:00', pmOut:'16:01', dailyTotal:8,   isEarlyOut:false, isOvertime:false, isWFH:false, lateMinutes:0.87, hasBeenEdited:false },
+                // ── MARCH 2026 ────────────────────────────────────────────
+                { date:'2026-03-02', amIn:'07:36', amOut:'12:00', pmIn:'13:00', pmOut:'17:00', dailyTotal:8,   isEarlyOut:false, isOvertime:false, isWFH:false, lateMinutes:0,    hasBeenEdited:false },
+                { date:'2026-03-03', amIn:'06:55', amOut:'12:00', pmIn:'13:00', pmOut:'16:04', dailyTotal:8,   isEarlyOut:false, isOvertime:false, isWFH:false, lateMinutes:0,    hasBeenEdited:false },
+                { date:'2026-03-04', amIn:'07:25', amOut:'12:00', pmIn:'13:00', pmOut:'17:02', dailyTotal:8,   isEarlyOut:false, isOvertime:false, isWFH:false, lateMinutes:0,    hasBeenEdited:false },
+                { date:'2026-03-05', amIn:'07:22', amOut:'12:00', pmIn:'13:00', pmOut:'16:25', dailyTotal:7,   isEarlyOut:false, isOvertime:false, isWFH:false, lateMinutes:0.37, hasBeenEdited:false },
+                { date:'2026-03-06', amIn:'06:16', amOut:'12:00', pmIn:'13:00', pmOut:'16:01', dailyTotal:8,   isEarlyOut:false, isOvertime:false, isWFH:false, lateMinutes:0,    hasBeenEdited:false },
+                { date:'2026-03-09', amIn:'06:40', amOut:'12:00', pmIn:'13:00', pmOut:'16:04', dailyTotal:8,   isEarlyOut:false, isOvertime:false, isWFH:false, lateMinutes:0,    hasBeenEdited:false },
+                { date:'2026-03-10', amIn:'06:31', amOut:'12:00', pmIn:'13:00', pmOut:'16:03', dailyTotal:8,   isEarlyOut:false, isOvertime:false, isWFH:false, lateMinutes:0.53, hasBeenEdited:false },
+                { date:'2026-03-11', amIn:'06:27', amOut:'12:00', pmIn:'13:00', pmOut:'16:06', dailyTotal:8,   isEarlyOut:false, isOvertime:false, isWFH:false, lateMinutes:0.45, hasBeenEdited:false },
+                { date:'2026-03-12', amIn:'06:41', amOut:'12:00', pmIn:'13:00', pmOut:'16:02', dailyTotal:8,   isEarlyOut:false, isOvertime:false, isWFH:false, lateMinutes:0.7,  hasBeenEdited:false },
+                { date:'2026-03-13', amIn:'06:40', amOut:'12:00', pmIn:'13:00', pmOut:'16:01', dailyTotal:8,   isEarlyOut:false, isOvertime:false, isWFH:false, lateMinutes:0.68, hasBeenEdited:false },
+                { date:'2026-03-16', amIn:'06:38', amOut:'12:00', pmIn:'13:00', pmOut:'16:02', dailyTotal:8,   isEarlyOut:false, isOvertime:false, isWFH:false, lateMinutes:0,    hasBeenEdited:false },
+                { date:'2026-03-17', amIn:'06:35', amOut:'12:00', pmIn:'13:00', pmOut:'16:15', dailyTotal:8,   isEarlyOut:false, isOvertime:false, isWFH:false, lateMinutes:0,    hasBeenEdited:false },
+                { date:'2026-03-18', amIn:'06:54', amOut:'12:00', pmIn:'13:00', pmOut:'16:03', dailyTotal:8,   isEarlyOut:false, isOvertime:false, isWFH:false, lateMinutes:0,    hasBeenEdited:false },
+                { date:'2026-03-19', amIn:'06:54', amOut:'12:00', pmIn:'13:00', pmOut:'16:03', dailyTotal:8,   isEarlyOut:false, isOvertime:false, isWFH:false, lateMinutes:0,    hasBeenEdited:false },
+                { date:'2026-03-25', amIn:'06:42', amOut:'12:00', pmIn:'13:00', pmOut:'16:04', dailyTotal:8,   isEarlyOut:false, isOvertime:false, isWFH:false, lateMinutes:0,    hasBeenEdited:false },
+                { date:'2026-03-26', amIn:'06:39', amOut:'12:00', pmIn:'13:00', pmOut:'16:02', dailyTotal:8,   isEarlyOut:false, isOvertime:false, isWFH:false, lateMinutes:0,    hasBeenEdited:false },
+                { date:'2026-03-27', amIn:'07:03', amOut:'12:00', pmIn:'13:00', pmOut:'16:13', dailyTotal:8,   isEarlyOut:false, isOvertime:false, isWFH:false, lateMinutes:0.06, hasBeenEdited:false },
+                { date:'2026-03-30', amIn:'06:44', amOut:'12:00', pmIn:'13:00', pmOut:'16:04', dailyTotal:8,   isEarlyOut:false, isOvertime:false, isWFH:false, lateMinutes:0,    hasBeenEdited:false },
+                { date:'2026-03-31', amIn:'07:03', amOut:'12:00', pmIn:'13:00', pmOut:'17:01', dailyTotal:8,   isEarlyOut:false, isOvertime:false, isWFH:false, lateMinutes:0.06, hasBeenEdited:false },
+                // ── APRIL 2026 ────────────────────────────────────────────
+                { date:'2026-04-01', amIn:'06:46', amOut:'12:00', pmIn:'13:00', pmOut:'16:05', dailyTotal:8,   isEarlyOut:false, isOvertime:false, isWFH:false, lateMinutes:0,    hasBeenEdited:false },
+                { date:'2026-04-06', amIn:'08:00', amOut:'12:00', pmIn:'13:00', pmOut:'17:00', dailyTotal:8,   isEarlyOut:false, isOvertime:false, isWFH:true,  lateMinutes:0,    hasBeenEdited:false },
+                { date:'2026-04-07', amIn:'08:00', amOut:'12:00', pmIn:'13:00', pmOut:'17:00', dailyTotal:8,   isEarlyOut:false, isOvertime:false, isWFH:true,  lateMinutes:0,    hasBeenEdited:false },
+                { date:'2026-04-08', amIn:'08:00', amOut:'12:00', pmIn:'13:00', pmOut:'17:00', dailyTotal:8,   isEarlyOut:false, isOvertime:false, isWFH:true,  lateMinutes:0,    hasBeenEdited:false },
+                { date:'2026-04-09', amIn:'08:00', amOut:'12:00', pmIn:'13:00', pmOut:'17:00', dailyTotal:8,   isEarlyOut:false, isOvertime:false, isWFH:true,  lateMinutes:0,    hasBeenEdited:false },
+                { date:'2026-04-10', amIn:'08:00', amOut:'12:00', pmIn:'13:00', pmOut:'17:00', dailyTotal:8,   isEarlyOut:false, isOvertime:false, isWFH:true,  lateMinutes:0,    hasBeenEdited:false },
+                { date:'2026-04-13', amIn:'08:00', amOut:'12:00', pmIn:'13:00', pmOut:'17:00', dailyTotal:8,   isEarlyOut:false, isOvertime:false, isWFH:true,  lateMinutes:0,    hasBeenEdited:false },
+                { date:'2026-04-14', amIn:'06:41', amOut:'12:00', pmIn:'13:00', pmOut:'16:16', dailyTotal:8,   isEarlyOut:false, isOvertime:false, isWFH:false, lateMinutes:0,    hasBeenEdited:false },
+                { date:'2026-04-15', amIn:'06:53', amOut:'12:00', pmIn:'13:00', pmOut:'17:03', dailyTotal:9,   isEarlyOut:false, isOvertime:true,  isWFH:false, lateMinutes:0,    hasBeenEdited:false },
+                { date:'2026-04-16', amIn:'06:46', amOut:'12:00', pmIn:'13:00', pmOut:'17:03', dailyTotal:9,   isEarlyOut:false, isOvertime:true,  isWFH:false, lateMinutes:0,    hasBeenEdited:false },
+                { date:'2026-04-17', amIn:'08:00', amOut:'12:00', pmIn:'13:00', pmOut:'17:00', dailyTotal:8,   isEarlyOut:false, isOvertime:false, isWFH:true,  lateMinutes:0,    hasBeenEdited:false },
+                { date:'2026-04-20', amIn:'08:00', amOut:'12:00', pmIn:'13:00', pmOut:'17:00', dailyTotal:8,   isEarlyOut:false, isOvertime:false, isWFH:true,  lateMinutes:0,    hasBeenEdited:false },
+                { date:'2026-04-21', amIn:'08:00', amOut:'12:00', pmIn:'13:00', pmOut:'17:00', dailyTotal:8,   isEarlyOut:false, isOvertime:false, isWFH:true,  lateMinutes:0,    hasBeenEdited:false },
+                { date:'2026-04-22', amIn:'08:00', amOut:'12:00', pmIn:'13:00', pmOut:'17:00', dailyTotal:8,   isEarlyOut:false, isOvertime:false, isWFH:true,  lateMinutes:0,    hasBeenEdited:false },
+                { date:'2026-04-23', amIn:'08:00', amOut:'12:00', pmIn:'13:00', pmOut:'17:00', dailyTotal:8,   isEarlyOut:false, isOvertime:false, isWFH:true,  lateMinutes:0,    hasBeenEdited:false },
+                { date:'2026-04-24', amIn:'08:00', amOut:'12:00', pmIn:'13:00', pmOut:'17:00', dailyTotal:8,   isEarlyOut:false, isOvertime:false, isWFH:true,  lateMinutes:0,    hasBeenEdited:false },
+            ].map((e, i) => ({ ...e, id: 'dtr_' + e.date.replace(/-/g,'') + '_' + i }))
+             .sort((a, b) => b.date.localeCompare(a.date));
 
-            // --- MANUAL LOG INJECTION ---
-            if (!logs.some(l => l.date === '2026-04-20')) {
-                logs.push({
-                    id: crypto.randomUUID(),
-                    date: '2026-04-20',
-                    amIn: '07:14',
-                    amOut: '11:30',
-                    pmIn: '12:15',
-                    pmOut: '17:16',
-                    dailyTotal: 8.00,
-                    isEarlyOut: false,
-                    isOvertime: false
-                });
-                logs.sort((a,b) => b.date.localeCompare(a.date));
+            // Always enforce DTR seed (version-controlled)
+            if (storedSeedVersion !== DTR_SEED_VERSION) {
+                logs = DTR_LOGS;
                 localStorage.setItem('ojt_logs', JSON.stringify(logs));
-                if (typeof syncToCloud === 'function') syncToCloud({ logs: logs });
+                localStorage.setItem('ojt_dtr_seed_version', DTR_SEED_VERSION);
+            } else {
+                // Seed already applied — load from localStorage (allows new sessions to be added on top)
+                let savedLogs = localStorage.getItem('ojt_logs');
+                if (savedLogs) {
+                    logs = JSON.parse(savedLogs);
+                    // Normalization step
+                    const seenDates = new Set();
+                    logs = logs
+                        .filter(log => {
+                            if (seenDates.has(log.date)) return false;
+                            seenDates.add(log.date);
+                            return true;
+                        })
+                        .map(log => {
+                            const effectiveAmIn = log.isEarlyOut ? log.amIn : (log.amIn < '07:00' ? '07:00' : log.amIn);
+                            const am = calculateHours(effectiveAmIn, log.amOut);
+                            const pm = (log.isEarlyOut || !log.pmIn || !log.pmOut) ? 0 : calculateHours(log.pmIn, log.pmOut);
+                            let isOvertime = log.isOvertime || false;
+                            let dailyTotal = log.dailyTotal !== undefined ? log.dailyTotal : Math.min(8, am + pm);
+                            return { ...log, isOvertime, dailyTotal };
+                        });
+                }
             }
+
+            // Ensure logs are strictly descending by Date to guarantee Dashboard formulas, timeline projections, and KPIs execute properly.
+            logs.sort((a,b) => b.date.localeCompare(a.date));
+
 
             // Set dynamic form and logout help
             const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Manila' }); // YYYY-MM-DD in PHT
@@ -2230,7 +2280,7 @@
         // Edit Log Handlers
         window.openEditDialog = function (id) {
             const log = logs.find(l => l.id === id);
-            if (!log || log.hasBeenEdited) return;
+            if (!log) return;
 
             document.getElementById('edit-log-id').value = log.id;
             document.getElementById('edit-am-in').value = log.amIn;
@@ -2306,7 +2356,7 @@
                 dailyTotal,
                 isEarlyOut,
                 isOvertime: finalIsOvertime,
-                hasBeenEdited: true
+                hasBeenEdited: false
             };
 
             localStorage.setItem('ojt_logs', JSON.stringify(logs));
@@ -2818,19 +2868,13 @@
                                     <i data-lucide="zap" class="w-[22px] h-[22px]"></i>
                                 </div>
                                 `}
-                                ${!log.hasBeenEdited ? `
                                 <button 
                                     onclick="openEditDialog('${log.id}')"
                                     class="p-3.5 hover:bg-emerald-500/10 text-stone-600 hover:text-emerald-400 rounded-2xl transition-all"
-                                    title="Edit log (1 time only)"
+                                    title="Edit session"
                                 >
                                     <i data-lucide="edit-3" class="w-[22px] h-[22px]"></i>
                                 </button>
-                                ` : `
-                                <div class="p-3.5 text-stone-800" title="Already Edited Once">
-                                    <i data-lucide="check" class="w-[22px] h-[22px]"></i>
-                                </div>
-                                `}
                                 <button 
                                     onclick="deleteLog('${log.id}')"
                                     class="p-3.5 hover:bg-red-500/10 text-stone-600 hover:text-red-400 rounded-2xl transition-all"
