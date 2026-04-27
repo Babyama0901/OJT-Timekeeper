@@ -1,0 +1,15 @@
+
+--- PAGE 1 ---
+Month   Day   Login Time   Logout Time   Session Duration   Late Jan   Day   In   Out   Duration   Late 20   Tue   7:00am   4:00pm   8 21   Wed   6:50am   4:01pm   8 22   Thu   6:42am   4:01pm   8 23   Fri   7:00am   4:00pm   8 24   Sat 25   Sun 26   Mon   6:56am   4:03pm   8 27   Tue   6:56am   4:02pm   8 28   Wed   7:17am   4:20pm   8   0.28 29   Thu   6:41am   4:02pm   8   0.7 30   Fri   6:42am   11:27am   4   0.7 31   Sat Feb   Day   In   Out   Duration   Late 1   Sun 2   Mon   6:50am   4:02pm   8 3   Tue   6:40am   4:02pm   8   0.68 4   Wed   6:59am   4:00pm   8   1 5   Thu   8:01am   5:01pm   8   2.03 6   Fri   Excused Absence 7   Sat
+
+--- PAGE 2 ---
+Month   Day   Login Time   Logout Time   Session Duration   Late 8   Sun 9   Mon   Excused Absence 10   Tue   Excused Absence 11   Wed   Excused Absence 12   Thu   Excused Absence 13   Fri   Excused Absence 14   Sat 15   Sun 16   Mon   6:46am   4:04pm   8 17   Tue   6:42am   4:00pm   8   0.71 18   Wed   7:25am   4:27pm   7   1.42 19   Thu   7:01am   4:02pm   8   1.02 20   Fri   6:49am   4:01pm   8   0.82 21   Sat 22   Sun 23   Mon   6:46am   4:05pm   8 24   Tue   7:01am   4:03pm   8   1.02 25   Wed   7:24am   4:00pm   7   1.4 26   Thu   7:01am   4:05pm   8   1.03 27   Fri   6:52am   4:01pm   8   0.87 28   Sat
+
+--- PAGE 3 ---
+Month   Day   Login Time   Logout Time   Session Duration   Late March   Day   In   Out   Duration   Late 1   Sun 2   Mon   7:36am   5:00pm   8 3   Tue   6:55am   4:04pm   8 4   Wed   7:25am   5:02pm   8 5   Thu   7:22am   4:25pm   7   0.37 6   Fri   6:16am   4:01pm   8 7   Sat 8   Sun 9   Mon   6:40am   4:04pm   8 10   Tue   6:31am   4:03pm   8   0.53 11   Wed   6:27am   4:06pm   8   0.45 12   Thu   6:41am   4:02pm   8   0.7 13   Fri   6:40am   4:01pm   8   0.68 14   Sat 15   Sun 16   Mon   6:38am   4:02pm   8 17   Tue   6:35am   4:15pm   8 18   Wed   6:54am   4:03pm   8 19   Thu   6:54am   4:03pm   8 20   Fri   Excused Absence
+
+--- PAGE 4 ---
+Month   Day   Login Time   Logout Time   Session Duration   Late 21   Sat 22   Sun 23   Mon   Excused Absence 24   Tue   Excused Absence 25   Wed   6:42am   4:04pm   8 26   Thu   6:39am   4:02pm   8 27   Fri   7:03am   4:13pm   8   0.06 28   Sat 29   Sun 30   Mon   6:44am   4:04pm   8 31   Tue   7:03am   5:01pm   8   0.06 April   Day   In   Out   Duration   Late 1   Wed   6:46am   4:05pm   8 2   Thu   Holiday 3   Fri   Holiday 4   Sat 5   Sun 6   Mon   Work from Home   8 7   Tue   Work from Home   8 8   Wed   Work from Home   8 9   Thu   Work from Home   8
+
+--- PAGE 5 ---
+Month   Day   Login Time   Logout Time   Session Duration   Late 10   Fri   Work from Home   8  11   Sat 12   Sun 13   Mon   Work from Home   8 14   Tue   6:41am   4:16pm   8 15   Wed   6:53am   5:03pm   9 16   Thu   6:46am   5:03pm   9 17   Fri   Work from Home   8 18   Sat 19   Sun 20   Mon   Work from Home   8 21   Tue   Work from Home   8 22   Wed   Work from Home   8 23   Thu   Work from Home   8 24   Fri   Work from Home   8  Current TOTAL Work Hours   459   16.53 REQUIRED WORK HOURS   486
